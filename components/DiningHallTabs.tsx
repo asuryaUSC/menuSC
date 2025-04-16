@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 
 interface DiningHallTabsProps {
   halls: Array<{

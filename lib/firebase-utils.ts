@@ -1,6 +1,6 @@
-import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore'
+import { doc, getDoc } from 'firebase/firestore'
 import { db } from './firebase'
-import { DailyMenu } from './types'
+import { DailyMenu, DiningHall, MealSection, FoodItem } from './types'
 
 export async function getTodaysMenu(): Promise<DailyMenu | null> {
   try {
@@ -30,21 +30,24 @@ export async function getAllergenFilteredMenu(allergensToExclude: string[]): Pro
     const filteredMenu = JSON.parse(JSON.stringify(menu)) as DailyMenu
 
     // Filter out items containing excluded allergens for each meal period
-    const mealPeriods = ['breakfast', 'lunch', 'dinner'] as const
+    const mealPeriods: Array<keyof Pick<DailyMenu, 'breakfast' | 'lunch' | 'dinner'>> = ['breakfast', 'lunch', 'dinner']
     mealPeriods.forEach(period => {
-      filteredMenu[period] = filteredMenu[period].map(hall => ({
-        ...hall,
-        sections: hall.sections.map(section => ({
-          ...section,
-          items: section.items.filter(item => 
-            !item.allergens.some(allergen => allergensToExclude.includes(allergen))
-          )
+      const halls = filteredMenu[period] as DiningHall[] | undefined;
+      if (halls) {
+         filteredMenu[period] = halls.map(hall => ({
+          ...hall,
+          sections: hall.sections.map((section: MealSection) => ({
+            ...section,
+            items: section.items.filter((item: FoodItem) => 
+              !item.allergens?.some(allergen => allergensToExclude.includes(allergen))
+            )
+          }))
         }))
-      }))
+      }
     })
 
     return filteredMenu
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error filtering menu by allergens:', error)
     return null
   }
