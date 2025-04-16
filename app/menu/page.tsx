@@ -4,8 +4,9 @@ import { useEffect, useState, useMemo, Suspense } from "react";
 import { useSearchParams } from 'next/navigation';
 import { TopNavBar } from "@/components/TopNavBar";
 import { MealSection } from "@/components/MealSection";
+import { FilterModal } from "@/components/FilterModal";
 import { getTodaysMenu } from "@/lib/firebase-utils";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Filter as FilterIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { DailyMenu, DiningHall as DiningHallType, MealSection as MealSectionType, FoodItem as FoodItemType } from "@/lib/types";
 
@@ -40,10 +41,53 @@ function MenuPageContent() {
   const searchParams = useSearchParams();
   const [halls, setHalls] = useState<ProcessedHall[]>([]);
   const [selectedHallIdx, setSelectedHallIdx] = useState(0);
-  const [selectedMeal, setSelectedMeal] = useState<string>("");
+  const [selectedMeal, setSelectedMeal] = useState<string>("Breakfast");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    dietary: [] as string[],
+    allergens: [] as string[],
+    meal: null as string | null,
+    halls: [] as string[],
+  });
+
+  // Helper function to filter food items
+  function filterFoodItems(items: FoodItemType[]): FoodItemType[] {
+    return items.filter(item => {
+      const tags = item.allergens || [];
+
+      // Dietary (must include at least one selected dietary tag)
+      if (filters.dietary.length && !filters.dietary.some(tag => 
+        tags.some(t => t.toLowerCase() === tag.toLowerCase())
+      )) return false;
+
+      // Allergens (must not include any selected allergens)
+      if (filters.allergens.length && filters.allergens.some(a => 
+        tags.some(t => t.toLowerCase() === a.toLowerCase())
+      )) return false;
+
+      return true;
+    });
+  }
+
+  // Handle hall selection from filters
+  useEffect(() => {
+    if (filters.halls.length === 1) {
+      const hallIndex = halls.findIndex(h => h.name === filters.halls[0]);
+      if (hallIndex !== -1 && hallIndex !== selectedHallIdx) {
+        setSelectedHallIdx(hallIndex);
+        
+        // Check if the current meal exists in the new hall
+        const newHall = halls[hallIndex];
+        const mealExists = newHall.sections.some(s => s.name === selectedMeal);
+        if (!mealExists && newHall.sections.length > 0) {
+          setSelectedMeal(newHall.sections[0].name);
+        }
+      }
+    }
+  }, [filters.halls, halls, selectedHallIdx, selectedMeal]);
 
   // Fetch menu and handle initial state from search params
   useEffect(() => {
@@ -142,7 +186,9 @@ function MenuPageContent() {
 
   const currentHall = halls[selectedHallIdx];
   const mealNames = currentHall?.sections?.map((s: ProcessedSection) => s.name) || [];
-  const currentSection = currentHall?.sections?.find((s: ProcessedSection) => s.name === selectedMeal);
+  const currentSection = currentHall?.sections?.find((s: ProcessedSection) => 
+    s.name === (filters.meal || selectedMeal)
+  );
   const today = useMemo(() => new Date(), []);
 
   // Scroll-to-top button logic
@@ -154,7 +200,7 @@ function MenuPageContent() {
   }, []);
 
   return (
-    <div style={{ background: "#fafbfc", minHeight: "100vh" }}>
+    <div style={{ background: "#fafbfc", minHeight: "100vh", position: 'relative' }}>
       {/* Highlight Style Injection - Apply temporary background */}
       <style>
         {`
@@ -249,24 +295,27 @@ function MenuPageContent() {
           {mealNames.map((meal: string) => (
             <motion.button
               key={meal}
-              onClick={() => setSelectedMeal(meal)}
+              onClick={() => {
+                setSelectedMeal(meal);
+                setFilters(prev => ({ ...prev, meal: null }));
+              }}
               style={{
                 outline: 0,
                 borderRadius: 9999,
                 padding: "8px 24px",
                 background:
-                  selectedMeal === meal
+                  (filters.meal || selectedMeal) === meal
                     ? meal === "Breakfast" ? "#FFF9E5" : meal === "Lunch" ? "#F9F3EB" : meal === "Dinner" ? "#FFF4F4" : "#f4f4f5"
                     : "#fff",
-                fontWeight: selectedMeal === meal ? 700 : 500,
+                fontWeight: (filters.meal || selectedMeal) === meal ? 700 : 500,
                 fontSize: 15,
-                color: selectedMeal === meal ? "#990000" : "#888",
-                boxShadow: selectedMeal === meal ? "0 1px 6px rgba(0,0,0,0.04)" : undefined,
+                color: (filters.meal || selectedMeal) === meal ? "#990000" : "#888",
+                boxShadow: (filters.meal || selectedMeal) === meal ? "0 1px 6px rgba(0,0,0,0.04)" : undefined,
                 transition: "all 0.18s cubic-bezier(.4,0,.2,1)",
                 cursor: "pointer",
                 minWidth: 90,
                 fontFamily: "Outfit",
-                border: selectedMeal === meal ? "2px solid #990000" : "2px solid transparent",
+                border: (filters.meal || selectedMeal) === meal ? "2px solid #990000" : "2px solid transparent",
               }}
             >
               {meal}
@@ -294,8 +343,11 @@ function MenuPageContent() {
               {currentSection && currentSection.subSections && currentSection.subSections.map((sub: MealSectionType, idx: number) => (
                 <MealSection
                   key={sub.name + idx}
-                  section={sub}
-                  mealType={selectedMeal}
+                  section={{
+                    ...sub,
+                    items: filters.dietary.length || filters.allergens.length ? filterFoodItems(sub.items) : sub.items
+                  }}
+                  mealType={filters.meal || selectedMeal}
                   highlightedItemId={highlightedItemId}
                 />
               ))}
@@ -303,7 +355,38 @@ function MenuPageContent() {
           )}
         </div>
       </div>
-      {/* Scroll-to-top button */}
+      {/* Filter Trigger Button (Fixed Position) */}
+      <button
+        onClick={() => setIsFilterModalOpen(true)}
+        aria-label="Open filters"
+        style={{
+          position: 'fixed',
+          bottom: 32,
+          right: 24,
+          zIndex: 200,
+          background: '#f4f4f5',
+          border: 'none',
+          borderRadius: 9999,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          padding: 12,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+        }}
+        onMouseOver={(e) => {
+            e.currentTarget.style.transform = 'translateY(-1px)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+        }}
+        onMouseOut={(e) => {
+            e.currentTarget.style.transform = 'translateY(0px)';
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+        }}
+      >
+        <FilterIcon size={20} color="#990000" />
+      </button>
+      {/* Scroll-to-top button (Adjust position if overlapping) */}
       <AnimatePresence>
         {showScrollTop && (
           <motion.button
@@ -313,9 +396,9 @@ function MenuPageContent() {
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             style={{
               position: "fixed",
-              bottom: 32,
+              bottom: 88,
               right: 24,
-              zIndex: 200,
+              zIndex: 190,
               background: "#fff",
               border: "1px solid #eee",
               borderRadius: 9999,
@@ -334,6 +417,18 @@ function MenuPageContent() {
           </motion.button>
         )}
       </AnimatePresence>
+      {/* Render the Filter Modal */}
+      <FilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        filters={filters}
+        setFilters={setFilters}
+        selectedMeal={selectedMeal}
+        setSelectedMeal={setSelectedMeal}
+        halls={halls}
+        selectedHallIdx={selectedHallIdx}
+        setSelectedHallIdx={setSelectedHallIdx}
+      />
     </div>
   );
 }
