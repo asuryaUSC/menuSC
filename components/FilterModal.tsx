@@ -195,11 +195,11 @@ export function FilterModal({
             <div style={{ marginBottom: 24 }}>
               <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#333' }}>Dining Halls</h3>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                {halls.map(hall => (
+                {halls.map((hall, idx) => (
                   <TogglePillButton 
                     key={hall.name} 
                     label={hall.name} 
-                    isSelected={filters.halls.includes(hall.name)} 
+                    isSelected={filters.halls.includes(hall.name) || idx === selectedHallIdx} 
                     onClick={() => toggleFilter('halls', hall.name)} 
                   />
                 ))}
