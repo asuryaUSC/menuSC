@@ -9,7 +9,7 @@ type PromptType = 'ios' | 'android' | 'macos' | 'none' | 'standalone';
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => void;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 };
 
 // Augment the WindowEventMap to include 'beforeinstallprompt'
@@ -29,7 +29,7 @@ export default function LandingPage() {
   useEffect(() => {
     const isStandalone = 
       window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as { standalone?: boolean }).standalone === true;
+      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
 
     if (isStandalone) {
       setPromptType('standalone');
@@ -66,7 +66,7 @@ export default function LandingPage() {
     if (promptType === 'ios') {
       setIsModalOpen(true);
     } else if (promptType === 'android' && deferredPrompt) {
-      deferredPrompt.prompt();
+      (deferredPrompt as BeforeInstallPromptEvent).prompt();
       deferredPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
           console.log('User accepted the install prompt');
@@ -100,7 +100,7 @@ export default function LandingPage() {
   // Note: This requires checking isStandalone *outside* the useEffect
   const isStandaloneInitialCheck = typeof window !== 'undefined' && 
     (window.matchMedia("(display-mode: standalone)").matches ||
-     (window.navigator as any).standalone === true);
+     (window.navigator as Navigator & { standalone?: boolean }).standalone === true);
 
   if (isStandaloneInitialCheck) {
     // Optionally return a minimal loading state or null while redirect happens
