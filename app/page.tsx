@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Utensils, Share, ListPlus, CheckCircle, X, Download } from 'lucide-react'
+import { Utensils, Share, ListPlus, CheckCircle, X, Download, ArrowRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 type PromptType = 'ios' | 'android' | 'macos' | 'none' | 'standalone';
@@ -111,28 +111,36 @@ export default function LandingPage() {
   let showPrimaryButton = true;
   if (promptType === 'android' && deferredPrompt) {
     primaryButtonText = "Install MenuSC App";
-  } else if (promptType === 'ios' || promptType === 'macos') { // Show steps for both iOS and macOS
-     primaryButtonText = "Show Install Steps";
+  } else if (promptType === 'ios' || promptType === 'macos') {
+    primaryButtonText = "Install App";
   } else if (promptType === 'none') {
-     showPrimaryButton = false;
+    showPrimaryButton = false;
   }
 
   return (
     <>
       <div
         style={{
-          background: '#FAFBFC', // Light background
+          background: '#FAFBFC',
           minHeight: '100vh',
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
           fontFamily: 'Outfit, sans-serif',
-          padding: '24px', // Padding around the content
-          filter: isModalOpen ? 'blur(5px)' : 'none', // Apply blur when modal is open
+          padding: '16px',
+          filter: isModalOpen ? 'blur(5px)' : 'none',
           transition: 'filter 0.2s ease-in-out',
+          boxSizing: 'border-box',
         }}
       >
-        <div style={{ textAlign: 'center', maxWidth: 440, width: '100%' }}>
+        <div style={{ 
+          textAlign: 'center', 
+          maxWidth: 440, 
+          width: '100%', 
+          marginTop: 0, 
+          marginBottom: 0,
+          padding: '8px',
+        }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 24 }}>
             <Utensils size={28} color="#990000" style={{ marginBottom: -2 }} />
             <h1 style={{ color: '#990000', fontSize: '28px', fontWeight: 700, margin: 0 }}>
@@ -149,29 +157,34 @@ export default function LandingPage() {
             <button
               onClick={handlePrimaryActionClick}
               style={{
-                backgroundColor: '#990000', // USC Red
+                backgroundColor: '#990000',
                 color: 'white',
                 fontWeight: 600,
                 fontSize: '16px',
                 padding: '14px 28px',
-                borderRadius: '9999px', // Pill shape
+                borderRadius: '9999px',
                 border: 'none',
-                marginBottom: '16px', // Space between buttons
-                boxShadow: '0 4px 14px rgba(153, 0, 0, 0.2)', // Subtle red shadow
+                marginBottom: '16px',
+                boxShadow: '0 4px 14px rgba(153, 0, 0, 0.2)',
                 cursor: 'pointer',
                 width: '100%',
                 transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
               }}
               onMouseOver={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(153, 0, 0, 0.25)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = '0 6px 16px rgba(153, 0, 0, 0.25)';
               }}
               onMouseOut={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0px)';
-                  e.currentTarget.style.boxShadow = '0 4px 14px rgba(153, 0, 0, 0.2)';
+                e.currentTarget.style.transform = 'translateY(0px)';
+                e.currentTarget.style.boxShadow = '0 4px 14px rgba(153, 0, 0, 0.2)';
               }}
             >
               {primaryButtonText}
+              <Download size={18} style={{ marginTop: '1px' }} />
             </button>
           )}
 
@@ -180,29 +193,34 @@ export default function LandingPage() {
             onClick={() => router.push('/menu')}
             style={{
               backgroundColor: 'transparent',
-              color: '#990000', // USC Red
+              color: '#990000',
               fontWeight: 600,
               fontSize: '16px',
-              padding: '12px 28px', // Slightly less padding than primary
-              borderRadius: '9999px', // Pill shape
+              padding: '12px 28px',
+              borderRadius: '9999px',
               border: '2px solid #990000',
               cursor: 'pointer',
               width: '100%',
               transition: 'background-color 0.15s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
             }}
-             onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(153, 0, 0, 0.05)'; // Very light red background on hover
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(153, 0, 0, 0.05)';
             }}
             onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.backgroundColor = 'transparent';
             }}
           >
             Use Web App
+            <ArrowRight size={20} />
           </button>
         </div>
       </div>
 
-      {/* Updated Install Instructions Modal (Handles iOS & macOS) */}
+      {/* Install Instructions Modal */}
       <AnimatePresence>
         {isModalOpen && (promptType === 'ios' || promptType === 'macos') && (
           <motion.div
@@ -226,7 +244,7 @@ export default function LandingPage() {
               initial={{ scale: 0.96, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.96, opacity: 0 }}
-              transition={{ duration: 0.2, delay: 0.05 }} 
+              transition={{ duration: 0.2, delay: 0.05 }}
               style={{
                 background: 'white',
                 borderRadius: 16,
@@ -274,18 +292,18 @@ export default function LandingPage() {
                     To add MenuSC to your Home Screen:
                   </p>
                   <ol style={{ fontSize: 14, lineHeight: 1.6, paddingLeft: 0, listStyleType: 'none', margin: 0 }}>
-                     <li style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                        <span style={{ background: '#fcebeb', borderRadius: '50%', width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#990000', fontWeight: 600, fontSize: 12 }}>1</span>
-                        <span style={{ color: '#333' }}>Tap the <Share size={16} style={{ display: 'inline', marginBottom: -3, color: '#555' }} /> Share button in Safari.</span>
-                      </li>
-                      <li style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                        <span style={{ background: '#fcebeb', borderRadius: '50%', width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#990000', fontWeight: 600, fontSize: 12 }}>2</span>
-                        <span style={{ color: '#333' }}>Scroll down and tap <b>&quot;Add to Home Screen&quot;</b> <ListPlus size={16} style={{ display: 'inline', marginBottom: -3, color: '#555' }} />.</span>
-                      </li>
-                      <li style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-                        <span style={{ background: '#fcebeb', borderRadius: '50%', width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#990000', fontWeight: 600, fontSize: 12 }}>3</span>
-                         <span style={{ color: '#333' }}>Tap <b>&quot;Add&quot;</b> in the top right.</span>
-                      </li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                      <span style={{ background: '#fcebeb', borderRadius: '50%', width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#990000', fontWeight: 600, fontSize: 12 }}>1</span>
+                      <span style={{ color: '#333' }}>Tap the <Share size={16} style={{ display: 'inline', marginBottom: -3, color: '#555' }} /> Share button</span>
+                    </li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                      <span style={{ background: '#fcebeb', borderRadius: '50%', width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#990000', fontWeight: 600, fontSize: 12 }}>2</span>
+                      <span style={{ color: '#333' }}>Select <b>"Add to Home Screen"</b></span>
+                    </li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                      <span style={{ background: '#fcebeb', borderRadius: '50%', width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#990000', fontWeight: 600, fontSize: 12 }}>3</span>
+                      <span style={{ color: '#333' }}>Tap <b>"Add"</b> to install</span>
+                    </li>
                   </ol>
                   <p style={{ textAlign: 'center', fontSize: 13, color: '#666', marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                     <CheckCircle size={15} color="#22c55e" /> Creates an app shortcut!
@@ -300,13 +318,13 @@ export default function LandingPage() {
                   </p>
                   <ul style={{ fontSize: 14, lineHeight: 1.6, paddingLeft: 20, listStyleType: 'disc', margin: 0 }}>
                     <li style={{ marginBottom: 8, color: '#333' }}>
-                      In <b>Safari:</b> Click File → <b>&quot;Add to Dock...&quot;</b>
+                      In <b>Safari:</b> Click File → <b>"Add to Dock..."</b>
                     </li>
                     <li style={{ color: '#333' }}>
-                      In <b>Chrome:</b> Click the <Download size={15} style={{ display: 'inline', marginBottom: -3 }}/> icon (or menu <span style={{fontSize: 18}}>⋮</span>) → <b>&quot;Install MenuSC...&quot;</b>
+                      In <b>Chrome:</b> Click the <Download size={15} style={{ display: 'inline', marginBottom: -3 }}/> icon → <b>"Install MenuSC..."</b>
                     </li>
                   </ul>
-                   <p style={{ textAlign: 'center', fontSize: 13, color: '#666', marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  <p style={{ textAlign: 'center', fontSize: 13, color: '#666', marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                     <CheckCircle size={15} color="#22c55e" /> Adds the app to your Applications folder.
                   </p>
                 </>
