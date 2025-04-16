@@ -9,10 +9,14 @@ import {
   Sun,
   Bean,
   Fish,
+  type LucideProps,
 } from "lucide-react";
 import { ReactNode } from "react";
 
-export const allergenIconMap: Record<string, { icon: React.ComponentType<any>; color: string }> = {
+// Define a more specific type for the icon component
+interface IconComponentProps extends LucideProps {}
+
+export const allergenIconMap: Record<string, { icon: React.ComponentType<IconComponentProps>; color: string }> = {
   Dairy: { icon: Milk, color: "#fbbf24" }, // Yellow
   Eggs: { icon: Egg, color: "#facc15" }, // Lighter yellow
   "Halal Ingredients": { icon: ShieldCheck, color: "#10b981" }, // Teal
@@ -28,8 +32,9 @@ export const allergenIconMap: Record<string, { icon: React.ComponentType<any>; c
 export function getAllergenIcon(allergen: string): { icon: ReactNode; color: string } {
   const entry = allergenIconMap[allergen];
   if (entry) {
-    const Icon = entry.icon;
-    return { icon: <Icon size={14} color={entry.color} />, color: entry.color };
+    const IconComponent = entry.icon;
+    // Pass props compatible with LucideProps
+    return { icon: <IconComponent size={14} color={entry.color} />, color: entry.color };
   }
   // fallback
   return { icon: <Sun size={14} color="#bbb" />, color: "#bbb" };
