@@ -15,6 +15,8 @@ export function parseUSCMenu(html: string): MenuData {
     dinner: []
   };
 
+  const mealTypes = ['breakfast', 'lunch', 'dinner'] as const;
+
   for (let i = 0; i < mealHeaders.length; i++) {
     const header = mealHeaders[i];
     const block = mealBlocks[i];
@@ -39,7 +41,7 @@ export function parseUSCMenu(html: string): MenuData {
         sections: []
       };
 
-      let currentCategory = '';
+      let currentCategory: string | null = null;
       let items: { name: string; allergens: string[] }[] = [];
 
       hall.querySelectorAll('h4, li').forEach(element => {
@@ -89,7 +91,10 @@ export function parseUSCMenu(html: string): MenuData {
         });
       }
 
-      menuData[mealType].push(diningHall);
+      if (!menuData[mealType]) {
+        menuData[mealType] = [];
+      }
+      menuData[mealType]?.push(diningHall);
     }
   }
 
