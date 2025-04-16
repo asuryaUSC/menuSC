@@ -14,10 +14,9 @@ type BeforeInstallPromptEvent = Event & {
 };
 
 // Augment the WindowEventMap to include 'beforeinstallprompt'
-// This tells TypeScript about the non-standard event
 declare global {
   interface WindowEventMap {
-    beforeinstallprompt: Event;
+    beforeinstallprompt: BeforeInstallPromptEvent;
   }
 }
 
@@ -35,11 +34,11 @@ export default function LandingPage() {
   useEffect(() => {
     const isStandalone = 
       window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone === true; // For older iOS Safari
+      (window.navigator as { standalone?: boolean }).standalone === true;
 
     if (isStandalone) {
       setPromptType('standalone');
-      router.replace("/menu"); // Use replace to avoid adding landing to history
+      router.replace("/menu");
       return;
     }
 
@@ -58,16 +57,15 @@ export default function LandingPage() {
         setPromptType('android');
         console.log("'beforeinstallprompt' event caught.");
       };
-      window['addEventListener']('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
+      window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       
-      // Cleanup
-      return () => window['removeEventListener']('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
+      return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     } else if (isMacOS) {
       setPromptType('macos');
     } else {
       setPromptType('none');
     }
-  }, [router]); // Depend on router
+  }, [router]);
 
   const handlePrimaryActionClick = () => {
     if (promptType === 'ios') {
