@@ -34,6 +34,7 @@ export default function RootLayout({
             font-family: 'Outfit', system-ui, sans-serif !important;
           }
         `}</style>
+        <link rel="icon" href="/icon.png" type="image/png" sizes="any" />
       </head>
       <body className={cn('h-full font-sans')}>
         {children}
