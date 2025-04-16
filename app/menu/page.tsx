@@ -1,13 +1,29 @@
 'use client'
 
 import { useEffect, useState, useMemo, Suspense } from "react";
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { TopNavBar } from "@/components/TopNavBar";
 import { MealSection } from "@/components/MealSection";
 import { getTodaysMenu } from "@/lib/firebase-utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { DailyMenu } from "@/lib/types";
+import type { DailyMenu, DiningHall as DiningHallType, MealSection as MealSectionType, FoodItem as FoodItemType } from "@/lib/types";
+
+// Define the structure we expect after processing
+interface ProcessedSection {
+  name: string; // e.g., "Breakfast", "Lunch", "Dinner"
+  subSections: MealSectionType[];
+}
+interface ProcessedHall {
+  name: string;
+  sections: ProcessedSection[];
+}
+
+// Define a food item type that includes the added boolean flags
+interface ProcessedFoodItem extends FoodItemType {
+  isVegetarian?: boolean;
+  isVegan?: boolean;
+}
 
 // Helper to create URL-friendly IDs (must match MealSection.tsx)
 const generateItemId = (sectionName: string, itemName: string) => {
@@ -21,21 +37,13 @@ function formatDate(date: Date) {
 }
 
 function MenuPageContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const [halls, setHalls] = useState<any[]>([]);
+  const [halls, setHalls] = useState<ProcessedHall[]>([]);
   const [selectedHallIdx, setSelectedHallIdx] = useState(0);
-  const [selectedMeal, setSelectedMeal] = useState("");
+  const [selectedMeal, setSelectedMeal] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
-
-  // Always compute today's date on the client
-  const todayStr = useMemo(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d.toISOString().split("T")[0];
-  }, []);
 
   // Fetch menu and handle initial state from search params
   useEffect(() => {
@@ -44,29 +52,32 @@ function MenuPageContent() {
       setError("");
       try {
         const menu = await getTodaysMenu();
-        // Process menu into halls structure (existing logic)
-        const hallMap: Record<string, any> = {};
-        ["Breakfast", "Lunch", "Dinner"].forEach((mealType) => {
-          const mealKey = mealType.toLowerCase() as keyof DailyMenu;
-          if (menu && menu[mealKey]) {
-            (menu[mealKey] as any[]).forEach((hall: any) => {
+        const hallMap: Record<string, ProcessedHall> = {};
+
+        if (menu) {
+          const mealTypes: Array<keyof Pick<DailyMenu, 'breakfast' | 'lunch' | 'dinner'>> = ['breakfast', 'lunch', 'dinner'];
+          mealTypes.forEach((mealKey) => {
+            const mealName = mealKey.charAt(0).toUpperCase() + mealKey.slice(1);
+            const diningHalls = menu[mealKey] as DiningHallType[] | undefined;
+
+            diningHalls?.forEach((hall) => {
               if (!hallMap[hall.name]) {
                 hallMap[hall.name] = { name: hall.name, sections: [] };
               }
               hallMap[hall.name].sections.push({
-                name: mealType,
-                subSections: hall.sections?.map((sub: any) => ({
+                name: mealName,
+                subSections: hall.sections?.map((sub: MealSectionType) => ({
                   name: sub.name,
-                  items: sub.items.map((item: any) => ({
+                  items: sub.items.map((item: FoodItemType): ProcessedFoodItem => ({
                     ...item,
-                    isVegetarian: item.isVegetarian || item.allergens?.includes("Vegetarian"),
-                    isVegan: item.isVegan || item.allergens?.includes("Vegan"),
+                    isVegetarian: item.allergens?.includes("Vegetarian"),
+                    isVegan: item.allergens?.includes("Vegan"),
                   })),
                 })) || [],
               });
             });
-          }
-        });
+          });
+        }
         const hallsArr = Object.values(hallMap);
         setHalls(hallsArr);
 
@@ -83,70 +94,61 @@ function MenuPageContent() {
         }
         setSelectedHallIdx(initialHallIdx);
 
-        let initialMeal = hallsArr[initialHallIdx]?.sections[0]?.name || "";
-        if (mealParam && hallsArr[initialHallIdx]?.sections.some((s: any) => s.name === mealParam)) {
+        let initialMeal = hallsArr[initialHallIdx]?.sections[0]?.name || "Breakfast";
+        if (mealParam && hallsArr[initialHallIdx]?.sections.some((s: ProcessedSection) => s.name === mealParam)) {
           initialMeal = mealParam;
         }
         setSelectedMeal(initialMeal);
 
-      } catch (e) {
+      } catch (fetchError: unknown) {
+        console.error("Fetch Menu Error:", fetchError);
         setError("Could not load menu data.");
       } finally {
         setLoading(false);
       }
     }
     fetchMenu();
-  }, [searchParams]); // Re-run only when searchParams change
+  }, [searchParams]);
 
-  // Handle scrolling and highlighting after data is loaded and state is set
+  // Handle scrolling and highlighting
   useEffect(() => {
-    // Don't run scroll logic if still loading or halls haven't been processed yet
     if (loading || halls.length === 0) return;
-
     const sectionParam = searchParams.get('section');
     const itemParam = searchParams.get('item');
-
-    // Check if the currently selected meal and hall match the params
-    // This ensures we scroll only after the correct content is potentially visible
-    const currentSelectedHallName = halls[selectedHallIdx]?.name;
     const hallParam = searchParams.get('hall');
     const mealParam = searchParams.get('meal');
+    const currentSelectedHallName = halls[selectedHallIdx]?.name;
 
     if (
-      sectionParam &&
-      itemParam &&
+      sectionParam && itemParam &&
       currentSelectedHallName === hallParam &&
       selectedMeal === mealParam
     ) {
       const targetId = generateItemId(sectionParam, itemParam);
       const element = document.getElementById(targetId);
-
       if (element) {
         setTimeout(() => {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
           setHighlightedItemId(targetId);
           setTimeout(() => setHighlightedItemId(null), 2000);
-        }, 150); // Increased delay slightly for safety
+        }, 150);
       } else {
-        console.log("Target element not found for scroll:", targetId);
+        console.log("Target element not found:", targetId);
       }
     } else {
-        // Clear highlight if params don't match current view
         setHighlightedItemId(null);
     }
-  }, [loading, halls, selectedHallIdx, selectedMeal, searchParams]); // Re-run when view changes
+  }, [loading, halls, selectedHallIdx, selectedMeal, searchParams]);
 
-  const currentHall = halls[selectedHallIdx] || halls[0];
-  const mealNames = currentHall?.sections?.map((s: any) => s.name) || [];
-  const currentSection = currentHall?.sections?.find((s: any) => s.name === selectedMeal) || currentHall?.sections?.[0];
-  const today = new Date();
+  const currentHall = halls[selectedHallIdx];
+  const mealNames = currentHall?.sections?.map((s: ProcessedSection) => s.name) || [];
+  const currentSection = currentHall?.sections?.find((s: ProcessedSection) => s.name === selectedMeal);
+  const today = useMemo(() => new Date(), []);
 
   // Scroll-to-top button logic
   const [showScrollTop, setShowScrollTop] = useState(false);
   useEffect(() => {
-    const onScroll = () => {
-      setShowScrollTop(window.scrollY > window.innerHeight * 0.75);
-    };
+    const onScroll = () => setShowScrollTop(window.scrollY > window.innerHeight * 0.75);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -203,7 +205,7 @@ function MenuPageContent() {
             <ChevronLeft size={20} color="#990000" />
           </button>
           <div style={{ fontWeight: 700, fontSize: 20, fontFamily: "Outfit", color: "#990000", textAlign: "center", minWidth: 180 }}>
-            {currentHall?.name || ""}
+            {currentHall?.name || "Loading Hall..."}
           </div>
           <button
             aria-label="Next Hall"
@@ -248,24 +250,13 @@ function MenuPageContent() {
             <motion.button
               key={meal}
               onClick={() => setSelectedMeal(meal)}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              transition={{ duration: 0.18 }}
               style={{
-                border: 0,
                 outline: 0,
                 borderRadius: 9999,
                 padding: "8px 24px",
                 background:
                   selectedMeal === meal
-                    ? meal === "Breakfast"
-                      ? "#FFF9E5"
-                      : meal === "Lunch"
-                      ? "#F9F3EB"
-                      : meal === "Dinner"
-                      ? "#FFF4F4"
-                      : "#f4f4f5"
+                    ? meal === "Breakfast" ? "#FFF9E5" : meal === "Lunch" ? "#F9F3EB" : meal === "Dinner" ? "#FFF4F4" : "#f4f4f5"
                     : "#fff",
                 fontWeight: selectedMeal === meal ? 700 : 500,
                 fontSize: 15,
@@ -277,25 +268,6 @@ function MenuPageContent() {
                 fontFamily: "Outfit",
                 border: selectedMeal === meal ? "2px solid #990000" : "2px solid transparent",
               }}
-              onMouseDown={e => e.currentTarget.style.background = "#ececec"}
-              onMouseUp={e => (e.currentTarget.style.background = selectedMeal === meal
-                ? meal === "Breakfast"
-                  ? "#FFF9E5"
-                  : meal === "Lunch"
-                  ? "#F9F3EB"
-                  : meal === "Dinner"
-                  ? "#FFF4F4"
-                  : "#f4f4f5"
-                : "#fff")}
-              onMouseLeave={e => (e.currentTarget.style.background = selectedMeal === meal
-                ? meal === "Breakfast"
-                  ? "#FFF9E5"
-                  : meal === "Lunch"
-                  ? "#F9F3EB"
-                  : meal === "Dinner"
-                  ? "#FFF4F4"
-                  : "#f4f4f5"
-                : "#fff")}
             >
               {meal}
             </motion.button>
@@ -319,7 +291,7 @@ function MenuPageContent() {
             </div>
           ) : (
             <AnimatePresence mode="wait">
-              {currentSection && currentSection.subSections && currentSection.subSections.map((sub: any, idx: number) => (
+              {currentSection && currentSection.subSections && currentSection.subSections.map((sub: MealSectionType, idx: number) => (
                 <MealSection
                   key={sub.name + idx}
                   section={sub}

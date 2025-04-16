@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, ArrowLeft, X } from 'lucide-react'
+import { Search, ArrowLeft } from 'lucide-react'
 import { getTodaysMenu } from '@/lib/firebase-utils'
 import type { DailyMenu, DiningHall, MealSection, FoodItem } from '@/lib/types'
 import { SearchResultCard } from '@/components/SearchResultCard'

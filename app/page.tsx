@@ -192,11 +192,11 @@ export default function LandingPage() {
                 </li>
                 <li style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
                   <span style={{ background: '#fcebeb', borderRadius: '50%', width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#990000', fontWeight: 600 }}>2</span>
-                  <span>Scroll down and tap "Add to Home Screen" <ListPlus size={16} style={{ display: 'inline', marginBottom: -2, color: '#555' }} />.</span>
+                  <span>Scroll down and tap &quot;Add to Home Screen&quot; <ListPlus size={16} style={{ display: 'inline', marginBottom: -2, color: '#555' }} />.</span>
                 </li>
                 <li style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
                   <span style={{ background: '#fcebeb', borderRadius: '50%', width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#990000', fontWeight: 600 }}>3</span>
-                  <span>Tap "Add" in the top right.</span>
+                  <span>Tap &quot;Add&quot; in the top right.</span>
                 </li>
               </ol>
 
