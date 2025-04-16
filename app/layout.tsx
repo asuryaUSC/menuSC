@@ -35,6 +35,11 @@ export default function RootLayout({
           }
         `}</style>
         <link rel="icon" href="/icon.png" type="image/png" sizes="any" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="MenuSC" />
+        <link rel="apple-touch-icon" href="/icon.png" />
+        <link rel="apple-touch-startup-image" href="/icon.png" />
       </head>
       <body className={cn('h-full font-sans')}>
         {children}
