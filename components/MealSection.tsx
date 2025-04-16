@@ -19,11 +19,10 @@ interface MealSectionProps {
       isVegan?: boolean
     }>
   }
-  mealType?: string
   highlightedItemId?: string | null
 }
 
-export function MealSection({ section, mealType, highlightedItemId }: MealSectionProps) {
+export function MealSection({ section, highlightedItemId }: MealSectionProps) {
   return (
     <div
       style={{

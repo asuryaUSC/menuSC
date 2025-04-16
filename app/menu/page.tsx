@@ -185,7 +185,6 @@ function MenuPageContent() {
   }, [loading, halls, selectedHallIdx, selectedMeal, searchParams]);
 
   const currentHall = halls[selectedHallIdx];
-  const mealNames = currentHall?.sections?.map((s: ProcessedSection) => s.name) || [];
   const currentSection = currentHall?.sections?.find((s: ProcessedSection) => 
     s.name === (filters.meal || selectedMeal)
   );
