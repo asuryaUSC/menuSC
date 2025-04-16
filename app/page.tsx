@@ -2,12 +2,24 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Utensils, Share, ListPlus, CheckCircle, X } from 'lucide-react'
+import { Utensils, Share, ListPlus, CheckCircle, X, Download } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+
+type PromptType = 'ios' | 'android' | 'macos' | 'none' | 'standalone';
+
+// Augment the WindowEventMap to include 'beforeinstallprompt'
+// This tells TypeScript about the non-standard event
+declare global {
+  interface WindowEventMap {
+    beforeinstallprompt: Event;
+  }
+}
 
 export default function LandingPage() {
   const router = useRouter()
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [promptType, setPromptType] = useState<PromptType>('none');
+  const [installPromptEvent, setInstallPromptEvent] = useState<Event | null>(null);
 
   // Detect Safari (iOS or macOS)
   const isSafari = typeof navigator !== 'undefined' && 
@@ -20,16 +32,57 @@ export default function LandingPage() {
       (window.navigator as any).standalone === true; // For older iOS Safari
 
     if (isStandalone) {
+      setPromptType('standalone');
       router.replace("/menu"); // Use replace to avoid adding landing to history
+      return;
+    }
+
+    const userAgent = navigator.userAgent;
+    const platform = navigator.platform;
+    const isIOS = /iPhone|iPad|iPod/i.test(userAgent);
+    const isAndroidChrome = /Android/i.test(userAgent) && /Chrome\/\d+/.test(userAgent) && !/OPR|SamsungBrowser|EdgA/i.test(userAgent);
+    const isMacOS = platform.toUpperCase().indexOf('MAC') >= 0 && !isIOS;
+
+    if (isIOS) {
+      setPromptType('ios');
+    } else if (isAndroidChrome) {
+      const handleBeforeInstallPrompt = (e: Event) => {
+        e.preventDefault();
+        setInstallPromptEvent(e);
+        setPromptType('android');
+        console.log("'beforeinstallprompt' event caught.");
+      };
+      window['addEventListener']('beforeinstallprompt', handleBeforeInstallPrompt);
+      
+      // Cleanup
+      return () => window['removeEventListener']('beforeinstallprompt', handleBeforeInstallPrompt);
+    } else if (isMacOS) {
+      setPromptType('macos');
+    } else {
+      setPromptType('none');
     }
   }, [router]); // Depend on router
 
-  const handleInstallClick = () => {
-    if (isSafari) {
-      setIsModalOpen(true)
+  const handlePrimaryActionClick = () => {
+    if (promptType === 'ios') {
+      setIsModalOpen(true); // Open iOS instructions modal
+    } else if (promptType === 'android' && installPromptEvent) {
+      // Show the browser's install prompt
+      (installPromptEvent as any).prompt();
+      // Wait for the user to respond
+      (installPromptEvent as any).userChoice.then((choiceResult: { outcome: string }) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('User accepted the install prompt');
+        } else {
+          console.log('User dismissed the install prompt');
+        }
+        setInstallPromptEvent(null); // Event can only be used once
+        setPromptType('none'); // Reset prompt type after interaction
+      });
+    } else if (promptType === 'macos') {
+      setIsModalOpen(true); // Open macOS instructions modal
     } else {
-      // For non-Safari, maybe show a different message or do nothing yet
-      console.log('Install prompt for non-Safari browsers coming soon.')
+      console.log('Primary action clicked for type:', promptType);
     }
   }
 
@@ -55,6 +108,16 @@ export default function LandingPage() {
   if (isStandaloneInitialCheck) {
     // Optionally return a minimal loading state or null while redirect happens
     return <div style={{ background: '#FAFBFC', minHeight: '100vh' }}></div>; 
+  }
+
+  let primaryButtonText = "Install App";
+  let showPrimaryButton = true;
+  if (promptType === 'android' && installPromptEvent) {
+    primaryButtonText = "Install MenuSC App";
+  } else if (promptType === 'ios' || promptType === 'macos') { // Show steps for both iOS and macOS
+     primaryButtonText = "Show Install Steps";
+  } else if (promptType === 'none') {
+     showPrimaryButton = false;
   }
 
   return (
@@ -85,33 +148,35 @@ export default function LandingPage() {
           </p>
 
           {/* Primary Action Button */}
-          <button
-            onClick={handleInstallClick}
-            style={{
-              backgroundColor: '#990000', // USC Red
-              color: 'white',
-              fontWeight: 600,
-              fontSize: '16px',
-              padding: '14px 28px',
-              borderRadius: '9999px', // Pill shape
-              border: 'none',
-              marginBottom: '16px', // Space between buttons
-              boxShadow: '0 4px 14px rgba(153, 0, 0, 0.2)', // Subtle red shadow
-              cursor: 'pointer',
-              width: '100%',
-              transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-            }}
-            onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 6px 16px rgba(153, 0, 0, 0.25)';
-            }}
-            onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'translateY(0px)';
-                e.currentTarget.style.boxShadow = '0 4px 14px rgba(153, 0, 0, 0.2)';
-            }}
-          >
-            Install App
-          </button>
+          {showPrimaryButton && (
+            <button
+              onClick={handlePrimaryActionClick}
+              style={{
+                backgroundColor: '#990000', // USC Red
+                color: 'white',
+                fontWeight: 600,
+                fontSize: '16px',
+                padding: '14px 28px',
+                borderRadius: '9999px', // Pill shape
+                border: 'none',
+                marginBottom: '16px', // Space between buttons
+                boxShadow: '0 4px 14px rgba(153, 0, 0, 0.2)', // Subtle red shadow
+                cursor: 'pointer',
+                width: '100%',
+                transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+              }}
+              onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(153, 0, 0, 0.25)';
+              }}
+              onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0px)';
+                  e.currentTarget.style.boxShadow = '0 4px 14px rgba(153, 0, 0, 0.2)';
+              }}
+            >
+              {primaryButtonText}
+            </button>
+          )}
 
           {/* Secondary Action Button */}
           <button
@@ -140,44 +205,43 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Install Instructions Modal */}
+      {/* Updated Install Instructions Modal (Handles iOS & macOS) */}
       <AnimatePresence>
-        {isModalOpen && (
+        {isModalOpen && (promptType === 'ios' || promptType === 'macos') && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
             style={{
               position: 'fixed',
               inset: 0,
-              zIndex: 1010, // Ensure modal is above blurred background
-              background: 'rgba(0, 0, 0, 0.3)', // Semi-transparent overlay
+              zIndex: 1010,
+              background: 'rgba(0, 0, 0, 0.3)',
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
               padding: 16,
             }}
-            onClick={() => setIsModalOpen(false)} // Close on overlay click
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setIsModalOpen(false)}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.15, delay: 0.05 }}
+              initial={{ scale: 0.96, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.96, opacity: 0 }}
+              transition={{ duration: 0.2, delay: 0.05 }} 
               style={{
-                position: 'relative', // For close button positioning
                 background: 'white',
                 borderRadius: 16,
-                padding: '24px 28px',
                 boxShadow: '0 4px 24px rgba(0,0,0,0.1)',
-                fontFamily: 'Outfit, sans-serif',
-                maxWidth: 450,
                 width: '100%',
+                maxWidth: 450,
+                padding: '20px 24px',
+                fontFamily: 'Outfit, sans-serif',
+                position: 'relative',
               }}
-              onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal
+              onClick={(e) => e.stopPropagation()}
             >
-              {/* Close Button */}
               <button
                 onClick={() => setIsModalOpen(false)}
                 aria-label="Close instructions"
@@ -202,34 +266,54 @@ export default function LandingPage() {
                 <X size={18} color="#555" />
               </button>
 
-              <h2 style={{ color: '#990000', fontSize: '20px', fontWeight: 600, marginBottom: '16px', textAlign: 'center' }}>
-                How to Install MenuSC
+              <h2 style={{ fontWeight: 700, fontSize: 18, marginBottom: 16, color: '#333' }}>
+                {promptType === 'ios' && "Install on iPhone/iPad"}
+                {promptType === 'macos' && "Install on Mac"}
               </h2>
-              
-              {/* Step-by-step instructions */}
-              <ol style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                <li style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                  <span style={{ background: '#fcebeb', borderRadius: '50%', width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#990000', fontWeight: 600 }}>1</span>
-                  <span>Tap the <Share size={16} style={{ display: 'inline', marginBottom: -2, color: '#555' }} /> Share button in Safari.</span>
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                  <span style={{ background: '#fcebeb', borderRadius: '50%', width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#990000', fontWeight: 600 }}>2</span>
-                  <span>Scroll down and tap &quot;Add to Home Screen&quot; <ListPlus size={16} style={{ display: 'inline', marginBottom: -2, color: '#555' }} />.</span>
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-                  <span style={{ background: '#fcebeb', borderRadius: '50%', width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#990000', fontWeight: 600 }}>3</span>
-                  <span>Tap &quot;Add&quot; in the top right.</span>
-                </li>
-              </ol>
 
-              <p style={{ textAlign: 'center', fontSize: 14, color: '#666', marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                 <CheckCircle size={16} color="#22c55e" /> This creates a shortcut to launch MenuSC like an app!
-              </p>
-              
-              {/* Placeholder for future image */}
-              {/* <div style={{ marginTop: 20, height: 100, background: '#eee', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa' }}>
-                [Optional Image Here]
-              </div> */}
+              {promptType === 'ios' && (
+                <>
+                  <p style={{ fontSize: 14, marginBottom: 12, color: '#555', lineHeight: 1.5 }}>
+                    To add MenuSC to your Home Screen:
+                  </p>
+                  <ol style={{ fontSize: 14, lineHeight: 1.6, paddingLeft: 0, listStyleType: 'none', margin: 0 }}>
+                     <li style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                        <span style={{ background: '#fcebeb', borderRadius: '50%', width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#990000', fontWeight: 600, fontSize: 12 }}>1</span>
+                        <span style={{ color: '#333' }}>Tap the <Share size={16} style={{ display: 'inline', marginBottom: -3, color: '#555' }} /> Share button in Safari.</span>
+                      </li>
+                      <li style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                        <span style={{ background: '#fcebeb', borderRadius: '50%', width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#990000', fontWeight: 600, fontSize: 12 }}>2</span>
+                        <span style={{ color: '#333' }}>Scroll down and tap <b>&quot;Add to Home Screen&quot;</b> <ListPlus size={16} style={{ display: 'inline', marginBottom: -3, color: '#555' }} />.</span>
+                      </li>
+                      <li style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                        <span style={{ background: '#fcebeb', borderRadius: '50%', width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#990000', fontWeight: 600, fontSize: 12 }}>3</span>
+                         <span style={{ color: '#333' }}>Tap <b>&quot;Add&quot;</b> in the top right.</span>
+                      </li>
+                  </ol>
+                  <p style={{ textAlign: 'center', fontSize: 13, color: '#666', marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <CheckCircle size={15} color="#22c55e" /> Creates an app shortcut!
+                  </p>
+                </>
+              )}
+
+              {promptType === 'macos' && (
+                <>
+                  <p style={{ fontSize: 14, marginBottom: 12, color: '#555', lineHeight: 1.5 }}>
+                    To install this app on your Mac:
+                  </p>
+                  <ul style={{ fontSize: 14, lineHeight: 1.6, paddingLeft: 20, listStyleType: 'disc', margin: 0 }}>
+                    <li style={{ marginBottom: 8, color: '#333' }}>
+                      In <b>Safari:</b> Click File → <b>&quot;Add to Dock...&quot;</b>
+                    </li>
+                    <li style={{ color: '#333' }}>
+                      In <b>Chrome:</b> Click the <Download size={15} style={{ display: 'inline', marginBottom: -3 }}/> icon (or menu <span style={{fontSize: 18}}>⋮</span>) → <b>&quot;Install MenuSC...&quot;</b>
+                    </li>
+                  </ul>
+                   <p style={{ textAlign: 'center', fontSize: 13, color: '#666', marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <CheckCircle size={15} color="#22c55e" /> Adds the app to your Applications folder.
+                  </p>
+                </>
+              )}
             </motion.div>
           </motion.div>
         )}
