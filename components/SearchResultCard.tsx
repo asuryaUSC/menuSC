@@ -14,8 +14,8 @@ interface SearchResultCardProps {
 }
 
 // Helper to create URL-friendly slugs
-const slugify = (str: string) => 
-  encodeURIComponent(str.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, ''));
+// const slugify = (str: string) => 
+//  encodeURIComponent(str.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, ''));
 
 export function SearchResultCard({ item, index }: SearchResultCardProps) {
   const router = useRouter()

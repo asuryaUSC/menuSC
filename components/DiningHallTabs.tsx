@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+// import { motion } from "framer-motion"; // Removed unused import
+import type { MealSection as MealSectionType } from "@/lib/types"; // Import MealSection type
 
 interface DiningHallTabsProps {
   halls: Array<{
     name: string;
-    sections: Array<any>;
+    sections: Array<MealSectionType>; // Replaced 'any' with MealSectionType
   }>;
   onChange?: (hall: string) => void;
   value?: string;
