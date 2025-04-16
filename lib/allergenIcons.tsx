@@ -13,10 +13,7 @@ import {
 } from "lucide-react";
 import { ReactNode } from "react";
 
-// Define a more specific type for the icon component
-interface IconComponentProps extends LucideProps {}
-
-export const allergenIconMap: Record<string, { icon: React.ComponentType<IconComponentProps>; color: string }> = {
+export const allergenIconMap: Record<string, { icon: React.ComponentType<LucideProps>; color: string }> = {
   Dairy: { icon: Milk, color: "#fbbf24" }, // Yellow
   Eggs: { icon: Egg, color: "#facc15" }, // Lighter yellow
   "Halal Ingredients": { icon: ShieldCheck, color: "#10b981" }, // Teal
