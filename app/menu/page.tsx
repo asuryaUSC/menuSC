@@ -6,7 +6,7 @@ import { TopNavBar } from "@/components/TopNavBar";
 import { MealSection } from "@/components/MealSection";
 import { FilterModal } from "@/components/FilterModal";
 import { getTodaysMenu } from "@/lib/firebase-utils";
-import { ChevronLeft, ChevronRight, Filter as FilterIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Filter as FilterIcon, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { DailyMenu, DiningHall as DiningHallType, MealSection as MealSectionType, FoodItem as FoodItemType } from "@/lib/types";
 
@@ -200,35 +200,50 @@ function MenuPageContent() {
   }, []);
 
   return (
-    <div style={{ background: "#fafbfc", minHeight: "100vh", position: 'relative' }}>
-      {/* Highlight Style Injection - Apply temporary background */}
+    <div style={{ 
+      background: "#fafbfc", 
+      minHeight: "100vh", 
+      position: 'relative',
+    }}>
+      {/* Highlight Style Injection */}
       <style>
         {`
           @keyframes highlight-item {
             0%, 100% { background-color: transparent; }
-            25%, 75% { background-color: rgba(255, 223, 186, 0.4); } /* Softer highlight */
+            25%, 75% { background-color: rgba(255, 223, 186, 0.4); }
           }
           .highlighted-item > div > div {
-             /* Target the inner Card or motion.div if needed */
-             animation: highlight-item 1.8s ease-in-out;
+            animation: highlight-item 1.8s ease-in-out;
           }
         `}
       </style>
-      <TopNavBar />
-      {/* Sticky Dining Hall Header */}
+
+      {/* TopNavBar - Fixed at top */}
+      <div style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 50,
+        background: "white",
+      }}>
+        <TopNavBar />
+      </div>
+
+      {/* Sticky Header Container */}
       <div
         style={{
           position: "sticky",
-          top: 60,
-          zIndex: 90,
-          background: "#fff",
-          boxShadow: "0 1px 6px rgba(0,0,0,0.03)",
-          padding: "16px 0 8px 0",
+          top: 56, // Height of TopNavBar
+          zIndex: 40,
+          background: "white",
+          padding: "16px 0",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
+          gap: 8,
+          boxShadow: "0 1px 0 rgba(0,0,0,0.05)",
         }}
       >
+        {/* Dining Hall Navigation */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16 }}>
           <button
             aria-label="Previous Hall"
@@ -274,57 +289,53 @@ function MenuPageContent() {
             <ChevronRight size={20} color="#990000" />
           </button>
         </div>
-        <div style={{ fontSize: 14, color: "#888", fontFamily: "Outfit", marginTop: 4 }}>{formatDate(today)}</div>
-      </div>
-      {/* Sticky Meal Selector */}
-      <div
-        style={{
-          position: "sticky",
-          top: 116,
-          zIndex: 80,
-          background: "#fff",
-          boxShadow: "0 1px 6px rgba(0,0,0,0.03)",
-          width: "100%",
-          display: "flex",
-          justifyContent: "center",
-          padding: "0 0 0 0",
-          marginBottom: 0,
-        }}
-      >
-        <div style={{ display: "flex", gap: 12, margin: "16px 0" }}>
-          {mealNames.map((meal: string) => (
-            <motion.button
+
+        {/* Date */}
+        <div style={{ fontSize: 14, color: "#888", fontFamily: "Outfit" }}>
+          {formatDate(today)}
+        </div>
+
+        {/* Meal Selector */}
+        <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
+          {["Breakfast", "Lunch", "Dinner"].map((meal) => (
+            <button
               key={meal}
-              onClick={() => {
-                setSelectedMeal(meal);
-                setFilters(prev => ({ ...prev, meal: null }));
-              }}
+              onClick={() => setSelectedMeal(meal)}
               style={{
-                outline: 0,
-                borderRadius: 9999,
-                padding: "8px 24px",
-                background:
-                  (filters.meal || selectedMeal) === meal
-                    ? meal === "Breakfast" ? "#FFF9E5" : meal === "Lunch" ? "#F9F3EB" : meal === "Dinner" ? "#FFF4F4" : "#f4f4f5"
-                    : "#fff",
-                fontWeight: (filters.meal || selectedMeal) === meal ? 700 : 500,
-                fontSize: 15,
-                color: (filters.meal || selectedMeal) === meal ? "#990000" : "#888",
-                boxShadow: (filters.meal || selectedMeal) === meal ? "0 1px 6px rgba(0,0,0,0.04)" : undefined,
-                transition: "all 0.18s cubic-bezier(.4,0,.2,1)",
-                cursor: "pointer",
-                minWidth: 90,
-                fontFamily: "Outfit",
-                border: (filters.meal || selectedMeal) === meal ? "2px solid #990000" : "2px solid transparent",
+                padding: '8px 20px',
+                borderRadius: '9999px',
+                fontWeight: 600,
+                fontSize: 14,
+                border: selectedMeal === meal ? 'none' : '2px solid #990000',
+                backgroundColor: selectedMeal === meal ? '#990000' : 'transparent',
+                color: selectedMeal === meal ? '#ffffff' : '#990000',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                fontFamily: 'Outfit, sans-serif',
+              }}
+              onMouseOver={(e) => {
+                if (selectedMeal !== meal) {
+                  e.currentTarget.style.backgroundColor = 'rgba(153, 0, 0, 0.05)';
+                }
+              }}
+              onMouseOut={(e) => {
+                if (selectedMeal !== meal) {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }
               }}
             >
               {meal}
-            </motion.button>
+            </button>
           ))}
         </div>
       </div>
+
       {/* Main Content */}
-      <div style={{ maxWidth: 640, margin: "0 auto", padding: "16px" }}>
+      <div style={{ 
+        maxWidth: 640, 
+        margin: "0 auto", 
+        padding: "16px",
+      }}>
         <div style={{ marginTop: 8 }}>
           {loading ? (
             <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 200 }}>
@@ -355,6 +366,7 @@ function MenuPageContent() {
           )}
         </div>
       </div>
+
       {/* Filter Trigger Button (Fixed Position) */}
       <button
         onClick={() => setIsFilterModalOpen(true)}
@@ -376,17 +388,18 @@ function MenuPageContent() {
           transition: 'transform 0.15s ease, box-shadow 0.15s ease',
         }}
         onMouseOver={(e) => {
-            e.currentTarget.style.transform = 'translateY(-1px)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+          e.currentTarget.style.transform = 'translateY(-1px)';
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
         }}
         onMouseOut={(e) => {
-            e.currentTarget.style.transform = 'translateY(0px)';
-            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+          e.currentTarget.style.transform = 'translateY(0px)';
+          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
         }}
       >
         <FilterIcon size={20} color="#990000" />
       </button>
-      {/* Scroll-to-top button (Adjust position if overlapping) */}
+
+      {/* Scroll-to-top button */}
       <AnimatePresence>
         {showScrollTop && (
           <motion.button
@@ -399,24 +412,32 @@ function MenuPageContent() {
               bottom: 88,
               right: 24,
               zIndex: 190,
-              background: "#fff",
-              border: "1px solid #eee",
+              background: '#f4f4f5',
+              border: 'none',
               borderRadius: 9999,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
               padding: 12,
-              cursor: "pointer",
-              fontSize: 18,
-              color: "#990000",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = 'translateY(0px)';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
             }}
             aria-label="Scroll to top"
           >
-            ↑
+            <ChevronUp size={20} color="#990000" />
           </motion.button>
         )}
       </AnimatePresence>
+
       {/* Render the Filter Modal */}
       <FilterModal
         isOpen={isFilterModalOpen}
