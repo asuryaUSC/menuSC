@@ -5,7 +5,6 @@ import {
   Sprout,
   Wheat,
   Leaf,
-  MoonStar,
   ShieldCheck,
   Sun,
   Bean,
