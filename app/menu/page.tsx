@@ -357,7 +357,6 @@ function MenuPageContent() {
                     ...sub,
                     items: filters.dietary.length || filters.allergens.length ? filterFoodItems(sub.items) : sub.items
                   }}
-                  mealType={filters.meal || selectedMeal}
                   highlightedItemId={highlightedItemId}
                 />
               ))}
