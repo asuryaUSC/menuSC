@@ -14,7 +14,9 @@ export type Allergen =
 
 export interface FoodItem {
   name: string
-  allergens: Allergen[]
+  allergens: string[]
+  isVegan?: boolean
+  isVegetarian?: boolean
 }
 
 export interface MealSection {
