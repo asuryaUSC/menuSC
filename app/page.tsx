@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Utensils, Share, ListPlus, CheckCircle, X, Download, ArrowRight } from 'lucide-react'
+import { Utensils, Share, CheckCircle, X, Download, ArrowRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 type PromptType = 'ios' | 'android' | 'macos' | 'none' | 'standalone';
@@ -298,11 +298,11 @@ export default function LandingPage() {
                     </li>
                     <li style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                       <span style={{ background: '#fcebeb', borderRadius: '50%', width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#990000', fontWeight: 600, fontSize: 12 }}>2</span>
-                      <span style={{ color: '#333' }}>Select <b>"Add to Home Screen"</b></span>
+                      <span style={{ color: '#333' }}>Select <b>&quot;Add to Home Screen&quot;</b></span>
                     </li>
                     <li style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
                       <span style={{ background: '#fcebeb', borderRadius: '50%', width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#990000', fontWeight: 600, fontSize: 12 }}>3</span>
-                      <span style={{ color: '#333' }}>Tap <b>"Add"</b> to install</span>
+                      <span style={{ color: '#333' }}>Tap <b>&quot;Add&quot;</b> to install</span>
                     </li>
                   </ol>
                   <p style={{ textAlign: 'center', fontSize: 13, color: '#666', marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
@@ -318,10 +318,10 @@ export default function LandingPage() {
                   </p>
                   <ul style={{ fontSize: 14, lineHeight: 1.6, paddingLeft: 20, listStyleType: 'disc', margin: 0 }}>
                     <li style={{ marginBottom: 8, color: '#333' }}>
-                      In <b>Safari:</b> Click File → <b>"Add to Dock..."</b>
+                      In <b>Safari:</b> Click File → <b>&quot;Add to Dock...&quot;</b>
                     </li>
                     <li style={{ color: '#333' }}>
-                      In <b>Chrome:</b> Click the <Download size={15} style={{ display: 'inline', marginBottom: -3 }}/> icon → <b>"Install MenuSC..."</b>
+                      In <b>Chrome:</b> Click the <Download size={15} style={{ display: 'inline', marginBottom: -3 }}/> icon → <b>&quot;Install MenuSC...&quot;</b>
                     </li>
                   </ul>
                   <p style={{ textAlign: 'center', fontSize: 13, color: '#666', marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
