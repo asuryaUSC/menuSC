@@ -13,6 +13,17 @@ export default function LandingPage() {
   const isSafari = typeof navigator !== 'undefined' && 
                    /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
+  // Redirect if running as PWA
+  useEffect(() => {
+    const isStandalone = 
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as any).standalone === true; // For older iOS Safari
+
+    if (isStandalone) {
+      router.replace("/menu"); // Use replace to avoid adding landing to history
+    }
+  }, [router]); // Depend on router
+
   const handleInstallClick = () => {
     if (isSafari) {
       setIsModalOpen(true)
@@ -34,6 +45,17 @@ export default function LandingPage() {
       document.body.style.overflow = 'auto';
     };
   }, [isModalOpen]);
+
+  // Prevent rendering landing content if redirecting (optional, but cleaner)
+  // Note: This requires checking isStandalone *outside* the useEffect
+  const isStandaloneInitialCheck = typeof window !== 'undefined' && 
+    (window.matchMedia("(display-mode: standalone)").matches ||
+     (window.navigator as any).standalone === true);
+
+  if (isStandaloneInitialCheck) {
+    // Optionally return a minimal loading state or null while redirect happens
+    return <div style={{ background: '#FAFBFC', minHeight: '100vh' }}></div>; 
+  }
 
   return (
     <>
