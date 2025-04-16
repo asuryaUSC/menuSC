@@ -32,4 +32,10 @@ export interface DailyMenu {
   breakfast: DiningHall[]
   lunch: DiningHall[]
   dinner: DiningHall[]
+}
+
+export interface MenuData {
+  breakfast?: DiningHall[];
+  lunch?: DiningHall[];
+  dinner?: DiningHall[];
 } 
