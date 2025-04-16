@@ -203,6 +203,7 @@ function MenuPageContent() {
       background: "#fafbfc", 
       minHeight: "100vh", 
       position: 'relative',
+      boxSizing: 'border-box',
     }}>
       {/* Highlight Style Injection */}
       <style>
@@ -214,6 +215,29 @@ function MenuPageContent() {
           .highlighted-item > div > div {
             animation: highlight-item 1.8s ease-in-out;
           }
+          /* iOS Safari specific fixes */
+          @supports (-webkit-touch-callout: none) {
+            html {
+              height: -webkit-fill-available;
+            }
+            body {
+              /* Prevent overscroll bounce effect common on iOS */
+              overscroll-behavior-y: none;
+              /* Prevent content from going under safe areas */
+              padding-top: env(safe-area-inset-top, 0px);
+              padding-bottom: env(safe-area-inset-bottom, 0px);
+              /* Fix for full viewport height on iOS */
+              min-height: -webkit-fill-available;
+              /* Prevent pull-to-refresh */
+              overflow-y: scroll;
+              -webkit-overflow-scrolling: touch;
+            }
+            /* Fix for sticky elements */
+            .ios-sticky-fix {
+              position: -webkit-sticky;
+              position: sticky;
+            }
+          }
         `}
       </style>
 
@@ -221,18 +245,22 @@ function MenuPageContent() {
       <div style={{
         position: "sticky",
         top: 0,
-        zIndex: 50,
+        zIndex: 100,
         background: "white",
-      }}>
+        height: "60px",
+        width: "100%",
+        boxShadow: "0 1px 6px rgba(0,0,0,0.05)",
+      }} className="ios-sticky-fix">
         <TopNavBar />
       </div>
 
-      {/* Sticky Header Container */}
+      {/* Sticky Header Container - Positioned below TopNavBar */}
       <div
+        className="ios-sticky-fix"
         style={{
           position: "sticky",
-          top: 56, // Height of TopNavBar
-          zIndex: 40,
+          top: 60,
+          zIndex: 90,
           background: "white",
           padding: "16px 0",
           display: "flex",
@@ -240,6 +268,7 @@ function MenuPageContent() {
           alignItems: "center",
           gap: 8,
           boxShadow: "0 1px 0 rgba(0,0,0,0.05)",
+          width: "100%",
         }}
       >
         {/* Dining Hall Navigation */}
@@ -329,13 +358,28 @@ function MenuPageContent() {
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Main content container - Add padding to ensure content starts below navbar */}
       <div style={{ 
-        maxWidth: 640, 
-        margin: "0 auto", 
-        padding: "16px",
+        maxWidth: 640,
+        margin: "0 auto",
+        padding: "16px", 
+        paddingTop: "16px",
+        boxSizing: "border-box",
+        position: "relative",
+        zIndex: 10,
       }}>
-        <div style={{ marginTop: 8 }}>
+        <style>
+          {`
+            @supports (-webkit-touch-callout: none) {
+              /* Additional iOS-specific fixes for main content */
+              #menu-content-container {
+                padding-top: calc(16px + env(safe-area-inset-top, 0px));
+                padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+              }
+            }
+          `}
+        </style>
+        <div id="menu-content-container" style={{ marginTop: 8 }}>
           {loading ? (
             <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 200 }}>
               <div style={{ fontSize: 18, color: "#888" }}>Loading menu…</div>
