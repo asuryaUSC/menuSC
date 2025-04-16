@@ -4,8 +4,14 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Utensils, Share, ListPlus, CheckCircle, X, Download } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { TopNavBar } from "@/components/TopNavBar"
 
 type PromptType = 'ios' | 'android' | 'macos' | 'none' | 'standalone';
+
+type BeforeInstallPromptEvent = Event & {
+  prompt: () => void;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+};
 
 // Augment the WindowEventMap to include 'beforeinstallprompt'
 // This tells TypeScript about the non-standard event
@@ -19,7 +25,7 @@ export default function LandingPage() {
   const router = useRouter()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [promptType, setPromptType] = useState<PromptType>('none');
-  const [installPromptEvent, setInstallPromptEvent] = useState<Event | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   // Detect Safari (iOS or macOS)
   const isSafari = typeof navigator !== 'undefined' && 
@@ -46,16 +52,16 @@ export default function LandingPage() {
     if (isIOS) {
       setPromptType('ios');
     } else if (isAndroidChrome) {
-      const handleBeforeInstallPrompt = (e: Event) => {
+      const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
         e.preventDefault();
-        setInstallPromptEvent(e);
+        setDeferredPrompt(e);
         setPromptType('android');
         console.log("'beforeinstallprompt' event caught.");
       };
-      window['addEventListener']('beforeinstallprompt', handleBeforeInstallPrompt);
+      window['addEventListener']('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
       
       // Cleanup
-      return () => window['removeEventListener']('beforeinstallprompt', handleBeforeInstallPrompt);
+      return () => window['removeEventListener']('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
     } else if (isMacOS) {
       setPromptType('macos');
     } else {
@@ -66,17 +72,17 @@ export default function LandingPage() {
   const handlePrimaryActionClick = () => {
     if (promptType === 'ios') {
       setIsModalOpen(true); // Open iOS instructions modal
-    } else if (promptType === 'android' && installPromptEvent) {
+    } else if (promptType === 'android' && deferredPrompt) {
       // Show the browser's install prompt
-      (installPromptEvent as any).prompt();
+      deferredPrompt.prompt();
       // Wait for the user to respond
-      (installPromptEvent as any).userChoice.then((choiceResult: { outcome: string }) => {
+      deferredPrompt.userChoice.then((choiceResult: { outcome: string }) => {
         if (choiceResult.outcome === 'accepted') {
           console.log('User accepted the install prompt');
         } else {
           console.log('User dismissed the install prompt');
         }
-        setInstallPromptEvent(null); // Event can only be used once
+        setDeferredPrompt(null); // Event can only be used once
         setPromptType('none'); // Reset prompt type after interaction
       });
     } else if (promptType === 'macos') {
@@ -112,7 +118,7 @@ export default function LandingPage() {
 
   let primaryButtonText = "Install App";
   let showPrimaryButton = true;
-  if (promptType === 'android' && installPromptEvent) {
+  if (promptType === 'android' && deferredPrompt) {
     primaryButtonText = "Install MenuSC App";
   } else if (promptType === 'ios' || promptType === 'macos') { // Show steps for both iOS and macOS
      primaryButtonText = "Show Install Steps";
