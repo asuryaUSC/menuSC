@@ -33,8 +33,8 @@ interface FilterModalProps {
       }>
     }>
   }>
-  // selectedHallIdx: number  // Kept for future use
-  setSelectedHallIdx: (idx: number) => void
+  selectedHallIdx: number
+  setSelectedHallIdx: (index: number) => void
 }
 
 // Simple reusable pill button component for toggles
@@ -69,6 +69,7 @@ export function FilterModal({
   selectedMeal, 
   setSelectedMeal,
   halls,
+  selectedHallIdx,
   setSelectedHallIdx
 }: FilterModalProps) {
   const handleClear = () => {
