@@ -1,10 +1,7 @@
 'use client'
 
-import { useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Check, ChevronLeft, ChevronRight, Filter as FilterIcon } from "lucide-react"
-import { getAllergenIcon } from "@/lib/allergenIcons"
-import React, { useState } from 'react'
+import { X, Filter as FilterIcon } from "lucide-react"
 
 interface FilterModalProps {
   isOpen: boolean
