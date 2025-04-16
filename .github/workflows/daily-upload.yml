@@ -2,8 +2,8 @@ name: Daily USC Menu Upload
 
 on:
   schedule:
-    - cron: '5 7 * * *' # Runs every day at 12:05 AM PT (7:05 UTC)
-  workflow_dispatch: # Allows manual triggering
+    - cron: '5 7 * * *' # Runs daily at 12:05 AM PT (7:05 UTC)
+  workflow_dispatch: # Allows manual trigger for testing
 
 jobs:
   upload-menu:
@@ -24,9 +24,12 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Setup Firebase Key
+      - name: Setup Firebase Service Account Key
         run: |
-          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" | sed 's/\\n/\n/g' > serviceAccountKey.json
+          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > encoded.json
+          echo "$(
+            jq -r '.' < encoded.json
+          )" > serviceAccountKey.json
 
       - name: Run Upload Script
         run: npx tsx dailyUpload.ts
