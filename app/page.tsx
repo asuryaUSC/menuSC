@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Utensils, Share, ListPlus, CheckCircle, X, Download } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { TopNavBar } from "@/components/TopNavBar"
 
 type PromptType = 'ios' | 'android' | 'macos' | 'none' | 'standalone';
 
@@ -25,10 +24,6 @@ export default function LandingPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [promptType, setPromptType] = useState<PromptType>('none');
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-
-  // Detect Safari (iOS or macOS)
-  const isSafari = typeof navigator !== 'undefined' && 
-                   /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
   // Redirect if running as PWA
   useEffect(() => {
@@ -69,22 +64,20 @@ export default function LandingPage() {
 
   const handlePrimaryActionClick = () => {
     if (promptType === 'ios') {
-      setIsModalOpen(true); // Open iOS instructions modal
+      setIsModalOpen(true);
     } else if (promptType === 'android' && deferredPrompt) {
-      // Show the browser's install prompt
       deferredPrompt.prompt();
-      // Wait for the user to respond
-      deferredPrompt.userChoice.then((choiceResult: { outcome: string }) => {
+      deferredPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
           console.log('User accepted the install prompt');
         } else {
           console.log('User dismissed the install prompt');
         }
-        setDeferredPrompt(null); // Event can only be used once
-        setPromptType('none'); // Reset prompt type after interaction
+        setDeferredPrompt(null);
+        setPromptType('none');
       });
     } else if (promptType === 'macos') {
-      setIsModalOpen(true); // Open macOS instructions modal
+      setIsModalOpen(true);
     } else {
       console.log('Primary action clicked for type:', promptType);
     }

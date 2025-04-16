@@ -33,7 +33,7 @@ interface FilterModalProps {
       }>
     }>
   }>
-  selectedHallIdx: number
+  // selectedHallIdx: number  // Kept for future use
   setSelectedHallIdx: (idx: number) => void
 }
 
@@ -69,7 +69,6 @@ export function FilterModal({
   selectedMeal, 
   setSelectedMeal,
   halls,
-  selectedHallIdx,
   setSelectedHallIdx
 }: FilterModalProps) {
   const handleClear = () => {
