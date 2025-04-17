@@ -1,8 +1,9 @@
+# Triggering cron registration + test every 2 minutes
 name: Daily USC Menu Upload
 
 on:
   schedule:
-    - cron: '5 7 * * *' # Runs daily at 12:05 AM PT
+    - cron: '*/2 * * * *' # Runs every 2 minutes for testing
   workflow_dispatch:
 
 jobs:
