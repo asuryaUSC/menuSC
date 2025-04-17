@@ -1,4 +1,4 @@
-# Triggering cron registration + test every 2 minutes
+# Added test comment
 name: Daily USC Menu Upload
 
 on:
