@@ -3,7 +3,7 @@ name: Daily USC Menu Upload
 
 on:
   schedule:
-    - cron: '*/2 * * * *' # Runs every 2 minutes for testing
+    - cron: '0 * * * *' # Runs every 2 minutes for testing
   workflow_dispatch:
 
 jobs:
