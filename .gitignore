@@ -42,5 +42,4 @@ next-env.d.ts
 
 # additions
 .cursor/rules/
-scripts/serviceAccountKey.json
 
