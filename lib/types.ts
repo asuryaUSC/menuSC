@@ -32,6 +32,7 @@ export interface DiningHall {
 export interface DailyMenu {
   date: string
   breakfast: DiningHall[]
+  brunch?: DiningHall[]
   lunch: DiningHall[]
   dinner: DiningHall[]
 }
@@ -39,6 +40,7 @@ export interface DailyMenu {
 export interface MenuData {
   date: string;
   breakfast?: DiningHall[];
+  brunch?: DiningHall[];
   lunch?: DiningHall[];
   dinner?: DiningHall[];
 } 

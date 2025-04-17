@@ -5,10 +5,12 @@ import { useSearchParams } from 'next/navigation';
 import { TopNavBar } from "@/components/TopNavBar";
 import { MealSection } from "@/components/MealSection";
 import { FilterModal } from "@/components/FilterModal";
-import { getTodaysMenu } from "@/lib/firebase-utils";
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { ChevronLeft, ChevronRight, Filter as FilterIcon, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { DailyMenu, DiningHall as DiningHallType, MealSection as MealSectionType, FoodItem as FoodItemType } from "@/lib/types";
+import { formatDate } from '@/lib/date-utils'
 
 // Define the structure we expect after processing
 interface ProcessedSection {
@@ -33,8 +35,25 @@ const generateItemId = (sectionName: string, itemName: string) => {
   return `${sectionSlug}-${itemSlug}`;
 };
 
-function formatDate(date: Date) {
-  return date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+// Helper to format date for display
+function formatDateForDisplay(date: Date) {
+  return {
+    dayOfWeek: date.toLocaleDateString(undefined, { weekday: "short" }),
+    month: date.toLocaleDateString(undefined, { month: "short" }),
+    day: date.getDate().toString(),
+  };
+}
+
+// Helper to get array of dates (today + next 3 days)
+function getDateRange() {
+  const dates = [];
+  const today = new Date();
+  for (let i = 0; i < 4; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() + i);
+    dates.push(date);
+  }
+  return dates;
 }
 
 function MenuPageContent() {
@@ -42,16 +61,35 @@ function MenuPageContent() {
   const [halls, setHalls] = useState<ProcessedHall[]>([]);
   const [selectedHallIdx, setSelectedHallIdx] = useState(0);
   const [selectedMeal, setSelectedMeal] = useState<string>("Breakfast");
+  const [selectedDateIdx, setSelectedDateIdx] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [selectedMenu, setSelectedMenu] = useState<DailyMenu | null>(null);
   const [filters, setFilters] = useState({
     dietary: [] as string[],
     allergens: [] as string[],
     meal: null as string | null,
     halls: [] as string[],
   });
+
+  const dates = useMemo(() => getDateRange(), []);
+  const selectedDate = useMemo(() => dates[selectedDateIdx].toISOString().split("T")[0], [dates, selectedDateIdx]);
+
+  // Define meal options
+  const mealOptions = useMemo(() => ["Breakfast", "Brunch", "Lunch", "Dinner"], []);
+
+  // Handle date parameter from URL
+  useEffect(() => {
+    const dateParam = searchParams.get("date");
+    if (dateParam && dates.length > 0) {
+      const idx = dates.findIndex(d => formatDate(d) === dateParam);
+      if (idx !== -1) {
+        setSelectedDateIdx(idx);
+      }
+    }
+  }, [searchParams, dates]);
 
   // Helper function to filter food items
   function filterFoodItems(items: FoodItemType[]): FoodItemType[] {
@@ -89,17 +127,32 @@ function MenuPageContent() {
     }
   }, [filters.halls, halls, selectedHallIdx, selectedMeal]);
 
-  // Fetch menu and handle initial state from search params
+  // Fetch menu data when selected date changes
   useEffect(() => {
     async function fetchMenu() {
       setLoading(true);
       setError("");
       try {
-        const menu = await getTodaysMenu();
+        const menuDoc = await getDoc(doc(db, "menus", selectedDate));
+        if (!menuDoc.exists()) {
+          setError("No menu available for this date.");
+          setHalls([]);
+          setSelectedMenu(null);
+          return;
+        }
+
+        const menu = menuDoc.data() as DailyMenu;
+        if (!menu) {
+          setError("This menu hasn&rsquo;t been posted yet.");
+          setHalls([]);
+          setSelectedMenu(null);
+          return;
+        }
+        setSelectedMenu(menu);
         const hallMap: Record<string, ProcessedHall> = {};
 
         if (menu) {
-          const mealTypes: Array<keyof Pick<DailyMenu, 'breakfast' | 'lunch' | 'dinner'>> = ['breakfast', 'lunch', 'dinner'];
+          const mealTypes = ['breakfast', 'brunch', 'lunch', 'dinner'] as const;
           mealTypes.forEach((mealKey) => {
             const mealName = mealKey.charAt(0).toUpperCase() + mealKey.slice(1);
             const diningHalls = menu[mealKey] as DiningHallType[] | undefined;
@@ -112,11 +165,18 @@ function MenuPageContent() {
                 name: mealName,
                 subSections: hall.sections?.map((sub: MealSectionType) => ({
                   name: sub.name,
-                  items: sub.items.map((item: FoodItemType): ProcessedFoodItem => ({
-                    ...item,
-                    isVegetarian: item.allergens?.includes("Vegetarian"),
-                    isVegan: item.allergens?.includes("Vegan"),
-                  })),
+                  items: sub.items.map((item: FoodItemType): ProcessedFoodItem => {
+                    const allergens = item.allergens || [];
+                    const isVegan = allergens.includes("Vegan");
+                    const isVegetarian = allergens.includes("Vegetarian");
+                    
+                    return {
+                      ...item,
+                      allergens,
+                      isVegan,
+                      isVegetarian,
+                    };
+                  }),
                 })) || [],
               });
             });
@@ -147,12 +207,13 @@ function MenuPageContent() {
       } catch (fetchError: unknown) {
         console.error("Fetch Menu Error:", fetchError);
         setError("Could not load menu data.");
+        setSelectedMenu(null);
       } finally {
         setLoading(false);
       }
     }
     fetchMenu();
-  }, [searchParams]);
+  }, [selectedDate, searchParams]);
 
   // Handle scrolling and highlighting
   useEffect(() => {
@@ -184,16 +245,59 @@ function MenuPageContent() {
     }
   }, [loading, halls, selectedHallIdx, selectedMeal, searchParams]);
 
+  // Add effect to scroll to highlighted item
+  useEffect(() => {
+    if (highlightedItemId) {
+      const element = document.getElementById(highlightedItemId)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        // Add highlight effect
+        element.style.backgroundColor = '#fff8e1'
+        setTimeout(() => {
+          element.style.backgroundColor = ''
+        }, 2000)
+      }
+    }
+  }, [highlightedItemId])
+
+  const onScroll = () => setShowScrollTop(window.scrollY > window.innerHeight * 0.75);
+
   const currentHall = halls[selectedHallIdx];
-  const currentSection = currentHall?.sections?.find((s: ProcessedSection) => 
-    s.name === (filters.meal || selectedMeal)
-  );
-  const today = useMemo(() => new Date(), []);
+  const currentHallName = currentHall?.name;
+
+  // Get available meals for current hall and date
+  const availableMeals = useMemo(() => {
+    if (!selectedMenu || !currentHallName) return [];
+
+    return mealOptions.filter(meal => {
+      const key = meal.toLowerCase() as keyof DailyMenu;
+      const halls = selectedMenu[key];
+      if (!halls || !Array.isArray(halls)) return false;
+
+      const hall = halls.find((h: DiningHallType) => h.name === currentHallName);
+      if (!hall) return false;
+
+      // Only include if at least one section has items
+      return hall.sections.some((section: MealSectionType) => section.items?.length > 0);
+    });
+  }, [selectedMenu, currentHallName, mealOptions]);
+
+  // Auto-select first available meal when date or hall changes
+  useEffect(() => {
+    if (availableMeals.length > 0 && !availableMeals.includes(selectedMeal)) {
+      setSelectedMeal(availableMeals[0]);
+    }
+  }, [availableMeals, selectedMeal]);
+
+  // Get current section with filtered items
+  const currentSection = useMemo(() => {
+    if (!currentHall) return null;
+    return currentHall.sections.find(s => s.name.toLowerCase() === selectedMeal.toLowerCase());
+  }, [currentHall, selectedMeal]);
 
   // Scroll-to-top button logic
   const [showScrollTop, setShowScrollTop] = useState(false);
   useEffect(() => {
-    const onScroll = () => setShowScrollTop(window.scrollY > window.innerHeight * 0.75);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -318,43 +422,120 @@ function MenuPageContent() {
           </button>
         </div>
 
-        {/* Date */}
-        <div style={{ fontSize: 14, color: "#888", fontFamily: "Outfit" }}>
-          {formatDate(today)}
+        {/* Date Selector */}
+        <div style={{ 
+          display: "flex", 
+          alignItems: "center", 
+          justifyContent: "center", 
+          width: "100%",
+          maxWidth: 640,
+          margin: "0 auto",
+          padding: "0 16px",
+          boxSizing: "border-box",
+        }}>
+          <div style={{ 
+            display: "flex", 
+            gap: 24,
+            width: "100%",
+            overflowX: "auto",
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+            WebkitOverflowScrolling: "touch",
+            padding: "4px 0",
+            justifyContent: "center",
+          }}>
+            {dates.map((date, idx) => {
+              const { dayOfWeek, month, day } = formatDateForDisplay(date);
+              const isSelected = idx === selectedDateIdx;
+              
+              return (
+                <motion.button
+                  key={date.toISOString()}
+                  onClick={() => setSelectedDateIdx(idx)}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    padding: "8px 0",
+                    cursor: "pointer",
+                    minWidth: 56,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 2,
+                    flexShrink: 0,
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div style={{ 
+                    fontSize: 13, 
+                    fontWeight: isSelected ? 600 : 400,
+                    color: isSelected ? "#990000" : "#999999",
+                    fontFamily: "Outfit",
+                    letterSpacing: "0.3px",
+                  }}>
+                    {dayOfWeek}
+                  </div>
+                  <div style={{ 
+                    fontSize: 13, 
+                    fontWeight: isSelected ? 600 : 400,
+                    color: isSelected ? "#990000" : "#999999",
+                    fontFamily: "Outfit",
+                    letterSpacing: "0.3px",
+                  }}>
+                    {month} {day}
+                  </div>
+                  {isSelected && (
+                    <motion.div
+                      style={{
+                        height: 2,
+                        width: "100%",
+                        background: "#990000",
+                        borderRadius: 1,
+                        marginTop: 2,
+                      }}
+                      layoutId="dateUnderline"
+                      transition={{ duration: 0.2 }}
+                    />
+                  )}
+                </motion.button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Meal Selector */}
         <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
-          {["Breakfast", "Lunch", "Dinner"].map((meal) => (
-            <button
-              key={meal}
-              onClick={() => setSelectedMeal(meal)}
-              style={{
-                padding: '8px 20px',
-                borderRadius: '9999px',
-                fontWeight: 600,
-                fontSize: 14,
-                border: selectedMeal === meal ? 'none' : '2px solid #990000',
-                backgroundColor: selectedMeal === meal ? '#990000' : 'transparent',
-                color: selectedMeal === meal ? '#ffffff' : '#990000',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                fontFamily: 'Outfit, sans-serif',
-              }}
-              onMouseOver={(e) => {
-                if (selectedMeal !== meal) {
-                  e.currentTarget.style.backgroundColor = 'rgba(153, 0, 0, 0.05)';
-                }
-              }}
-              onMouseOut={(e) => {
-                if (selectedMeal !== meal) {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }
-              }}
-            >
-              {meal}
-            </button>
-          ))}
+          {mealOptions.map((meal) => {
+            const isAvailable = availableMeals.includes(meal);
+            const isSelected = selectedMeal === meal;
+            
+            // Skip Brunch if it's not available
+            if (meal === "Brunch" && !isAvailable) return null;
+            
+            return (
+              <motion.button
+                key={meal}
+                onClick={() => isAvailable && setSelectedMeal(meal)}
+                style={{
+                  padding: '8px 20px',
+                  borderRadius: '9999px',
+                  fontWeight: 600,
+                  fontSize: 14,
+                  border: isSelected ? 'none' : '2px solid #990000',
+                  backgroundColor: isSelected ? '#990000' : 'transparent',
+                  color: isSelected ? '#ffffff' : (isAvailable ? '#990000' : '#999999'),
+                  cursor: isAvailable ? 'pointer' : 'not-allowed',
+                  transition: 'all 0.2s ease',
+                  fontFamily: 'Outfit, sans-serif',
+                  opacity: isAvailable ? 1 : 0.6,
+                }}
+                whileTap={isAvailable ? { scale: 0.98 } : undefined}
+                title={!isAvailable ? "Not available on this date" : undefined}
+              >
+                {meal}
+              </motion.button>
+            );
+          })}
         </div>
       </div>
 
@@ -389,12 +570,58 @@ function MenuPageContent() {
               <div style={{ fontSize: 18, color: "#c00" }}>{error}</div>
             </div>
           ) : halls.length === 0 ? (
-            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 200 }}>
-              <div style={{ fontSize: 18, color: "#888" }}>No menu available for today.</div>
-            </div>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              style={{ 
+                display: "flex", 
+                flexDirection: "column",
+                justifyContent: "center", 
+                alignItems: "center", 
+                minHeight: 200,
+                gap: 12,
+              }}
+            >
+              <div style={{ fontSize: 24 }}>📅</div>
+              <div style={{ 
+                fontSize: 18, 
+                color: "#666",
+                textAlign: "center",
+                lineHeight: 1.4,
+              }}>
+                Menus for this day aren&rsquo;t available yet.
+                <br />
+                Try checking back later.
+              </div>
+            </motion.div>
+          ) : !currentSection || currentSection.subSections.length === 0 ? (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              style={{ 
+                display: "flex", 
+                flexDirection: "column",
+                justifyContent: "center", 
+                alignItems: "center", 
+                minHeight: 200,
+                gap: 12,
+              }}
+            >
+              <div style={{ fontSize: 24 }}>🥄</div>
+              <div style={{ 
+                fontSize: 18, 
+                color: "#666",
+                textAlign: "center",
+                lineHeight: 1.4,
+              }}>
+                This menu hasn&rsquo;t been posted yet.
+                <br />
+                Check back soon!
+              </div>
+            </motion.div>
           ) : (
             <AnimatePresence mode="wait">
-              {currentSection && currentSection.subSections && currentSection.subSections.map((sub: MealSectionType, idx: number) => (
+              {currentSection.subSections.map((sub: MealSectionType, idx: number) => (
                 <MealSection
                   key={sub.name + idx}
                   section={{
@@ -491,6 +718,9 @@ function MenuPageContent() {
         halls={halls}
         selectedHallIdx={selectedHallIdx}
         setSelectedHallIdx={setSelectedHallIdx}
+        dates={dates}
+        selectedDateIdx={selectedDateIdx}
+        setSelectedDateIdx={setSelectedDateIdx}
       />
     </div>
   );

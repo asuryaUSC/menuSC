@@ -3,85 +3,131 @@
 import { useEffect, useRef, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, ArrowLeft } from 'lucide-react'
-import { getTodaysMenu } from '@/lib/firebase-utils'
+import { Search, ArrowLeft, ChevronDown } from 'lucide-react'
+import { getUpcomingMenus } from '@/lib/firebase-utils'
 import type { DailyMenu, DiningHall, FoodItem } from '@/lib/types'
 import { SearchResultCard } from '@/components/SearchResultCard'
+
+// Helper to get local date string in YYYY-MM-DD format
+function getLocalDateString(date: Date = new Date()) {
+  return date.toLocaleDateString('en-CA', {
+    timeZone: 'America/Los_Angeles'
+  })
+}
 
 // Define a type for the search results, including context
 interface SearchResultItem extends FoodItem {
   mealType: string
   hallName: string
   sectionName: string
+  date: string
+}
+
+// Helper to extract date from search query
+function extractDateFromQuery(query: string): { date: string | null, rest: string } {
+  // Match patterns like "Apr 17", "April 17", "4/17", or "2025-04-17"
+  const dateRegex = /(?:\b(?:apr|april)\s+(\d{1,2})\b|\b(\d{1,2})\/(\d{1,2})\b|\b(\d{4}-\d{2}-\d{2})\b)/i
+  const match = query.match(dateRegex)
+  
+  if (match) {
+    let date: string | null = null
+    const now = new Date()
+    const year = now.getFullYear()
+    
+    if (match[1]) { // "Apr 17" or "April 17"
+      const day = match[1].padStart(2, '0')
+      date = `${year}-04-${day}`
+    } else if (match[2] && match[3]) { // "4/17"
+      const month = match[2].padStart(2, '0')
+      const day = match[3].padStart(2, '0')
+      date = `${year}-${month}-${day}`
+    } else if (match[4]) { // "2025-04-17"
+      date = match[4]
+    }
+    
+    if (date) {
+      const rest = query.replace(dateRegex, '').trim()
+      return { date, rest }
+    }
+  }
+  
+  return { date: null, rest: query }
 }
 
 export default function SearchPage() {
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [menuData, setMenuData] = useState<DailyMenu | null>(null)
+  const [menuDataMap, setMenuDataMap] = useState<Record<string, DailyMenu>>({})
   const [loading, setLoading] = useState(true)
+  const [visibleCount, setVisibleCount] = useState(20)
 
-  // Fetch menu data on mount
+  // Load 4 days of menus
   useEffect(() => {
-    async function loadMenu() {
+    async function load() {
       setLoading(true)
-      const data = await getTodaysMenu()
-      setMenuData(data)
+      const menus = await getUpcomingMenus()
+      setMenuDataMap(menus)
       setLoading(false)
-      inputRef.current?.focus() // Autofocus after loading
+      inputRef.current?.focus()
     }
-    loadMenu()
+    load()
   }, [])
 
-  // Filter menu data based on search query
-  const searchResults = useMemo((): SearchResultItem[] => {
-    if (!searchQuery || !menuData) {
-      return []
-    }
-
-    const query = searchQuery.toLowerCase().trim()
-    if (!query) {
-      return []
-    }
-
+  // Search all dates
+  const searchResults = useMemo(() => {
+    if (!searchQuery || Object.keys(menuDataMap).length === 0) return []
+    
+    const { date: filterDate, rest: refinedQuery } = extractDateFromQuery(searchQuery)
+    const query = refinedQuery.toLowerCase().trim()
+    const mealTypes: Array<keyof DailyMenu> = ['breakfast', 'brunch', 'lunch', 'dinner']
     const results: SearchResultItem[] = []
-    const mealTypes: Array<keyof DailyMenu> = ['breakfast', 'lunch', 'dinner']
+    const today = getLocalDateString()
 
-    mealTypes.forEach((mealKey) => {
-      const mealName = mealKey.charAt(0).toUpperCase() + mealKey.slice(1);
-      const halls = menuData[mealKey] as DiningHall[] | undefined
+    for (const [date, menu] of Object.entries(menuDataMap)) {
+      // Skip dates in the past
+      if (date < today) continue
+      
+      // Skip if date filter is specified and doesn't match
+      if (filterDate && date !== filterDate) continue
 
-      halls?.forEach((hall) => {
-        hall.sections.forEach((section) => {
-          section.items.forEach((item) => {
-            if (item.name.toLowerCase().includes(query)) {
-              results.push({
-                ...item,
-                mealType: mealName,
-                hallName: hall.name,
-                sectionName: section.name,
-              })
+      for (const meal of mealTypes) {
+        const mealName = meal.charAt(0).toUpperCase() + meal.slice(1)
+        const halls = menu[meal] as DiningHall[] | undefined || []
+        for (const hall of halls) {
+          for (const section of hall.sections) {
+            for (const item of section.items) {
+              if (item.name.toLowerCase().includes(query)) {
+                results.push({
+                  ...item,
+                  mealType: mealName,
+                  hallName: hall.name,
+                  sectionName: section.name,
+                  date,
+                })
+              }
             }
-            // Bonus: Check allergens
-            // else if (item.allergens?.some(a => a.toLowerCase().includes(query))) {
-            //   results.push({ ...item, mealType: mealName, hallName: hall.name, sectionName: section.name });
-            // }
-          })
-        })
-      })
-    })
+          }
+        }
+      }
+    }
 
-    return results
-  }, [searchQuery, menuData])
+    // Sort by soonest date first
+    return results.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+  }, [searchQuery, menuDataMap])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     setSearchQuery(value)
+    setVisibleCount(20) // Reset visible count when search changes
     // Re-focus if cleared via default clear button (value becomes empty)
     if (!value && inputRef.current) {
-        setTimeout(() => inputRef.current?.focus(), 0); 
+      setTimeout(() => inputRef.current?.focus(), 0)
     }
+  }
+
+  const handleLoadMore = () => {
+    setVisibleCount(prev => prev + 20)
   }
 
   return (
@@ -99,8 +145,8 @@ export default function SearchPage() {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        paddingTop: '15vh', // Push content down a bit
-        overflowY: 'auto', // Allow scrolling for results
+        paddingTop: '15vh',
+        overflowY: 'auto',
       }}
     >
       {/* Back Button */}
@@ -142,8 +188,8 @@ export default function SearchPage() {
         transition={{ duration: 0.25, delay: 0.05 }}
         style={{
           position: 'relative',
-          width: 'min(90%, 600px)', // Responsive width
-          marginBottom: 24, // Space before results
+          width: 'min(90%, 600px)',
+          marginBottom: 24,
         }}
       >
         <Search
@@ -165,7 +211,7 @@ export default function SearchPage() {
           onChange={handleInputChange}
           style={{
             width: '100%',
-            padding: '16px 24px 16px 60px', // Make space for icon
+            padding: '16px 24px 16px 60px',
             fontSize: '20px',
             borderRadius: '9999px',
             backgroundColor: 'white',
@@ -175,21 +221,10 @@ export default function SearchPage() {
             color: '#222',
             fontFamily: 'Outfit, sans-serif',
             letterSpacing: '-0.2px',
-            WebkitAppearance: 'none', // Remove default mobile styling
+            WebkitAppearance: 'none',
             appearance: 'none',
           }}
         />
-        {/* Custom Clear Button (optional, styling default is tricky) */}
-        {/* <button
-          onClick={() => {
-            setSearchQuery('');
-            inputRef.current?.focus();
-          }}
-          style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 8 }}
-          hidden={!searchQuery}
-        >
-          <X size={18} color="#888" />
-        </button> */}
       </motion.div>
 
       {/* Results Area */}
@@ -199,12 +234,45 @@ export default function SearchPage() {
         ) : searchQuery && searchResults.length === 0 ? (
           <p style={{ textAlign: 'center', color: '#888', marginTop: 20 }}>No results found.</p>
         ) : searchQuery ? (
-          <AnimatePresence>
-            {searchResults.map((item, index) => (
-              <SearchResultCard key={`${item.name}-${item.hallName}-${index}`} item={item} index={index} />
-            ))}
-          </AnimatePresence>
-        ) : null /* Don't show anything if query is empty */}
+          <>
+            <AnimatePresence>
+              {searchResults.slice(0, visibleCount).map((item, index) => (
+                <SearchResultCard
+                  key={`${item.date}-${item.name}-${item.hallName}-${item.sectionName}-${index}`}
+                  item={item}
+                  index={index}
+                />
+              ))}
+            </AnimatePresence>
+            {searchResults.length > visibleCount && (
+              <motion.button
+                onClick={handleLoadMore}
+                style={{
+                  width: '100%',
+                  padding: '12px 24px',
+                  marginTop: 12,
+                  background: 'white',
+                  border: '1px solid #eee',
+                  borderRadius: 12,
+                  color: '#666',
+                  fontSize: 14,
+                  fontWeight: 500,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
+                whileHover={{ background: '#f9f9f9' }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Load more results
+                <ChevronDown size={16} />
+              </motion.button>
+            )}
+          </>
+        ) : null}
       </div>
     </motion.div>
   )
