@@ -1,11 +1,13 @@
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import type { FoodItem } from '@/lib/types'
+import { formatDatePacific } from '@/lib/date-utils'
 
 interface SearchResultItem extends FoodItem {
   mealType: string
   hallName: string
   sectionName: string
+  date: string
 }
 
 interface SearchResultCardProps {
@@ -20,13 +22,19 @@ interface SearchResultCardProps {
 export function SearchResultCard({ item, index }: SearchResultCardProps) {
   const router = useRouter()
 
+  // Fix date display by adding one day
+  const actualDate = new Date(item.date)
+  actualDate.setDate(actualDate.getDate() + 1)
+  const formattedDate = formatDatePacific(actualDate.toISOString().split('T')[0])
+
   const handleClick = () => {
     const params = new URLSearchParams({
+      date: item.date,
       hall: item.hallName,
       meal: item.mealType,
       section: item.sectionName,
-      item: item.name, // Pass item name for potential highlight
-    });
+      item: item.name,
+    })
     router.push(`/menu?${params.toString()}`)
   }
 
@@ -57,6 +65,9 @@ export function SearchResultCard({ item, index }: SearchResultCardProps) {
       <div style={{ fontSize: 17, fontWeight: 600, color: '#333', marginBottom: 4 }}>{item.name}</div>
       <div style={{ fontSize: 14, color: '#777' }}>
         {item.mealType} • {item.hallName} • {item.sectionName}
+      </div>
+      <div style={{ fontSize: 13, color: '#999', marginTop: 4 }}>
+        📅 {formattedDate}
       </div>
       {/* Optional: Add allergen icons here if needed */}
     </motion.div>

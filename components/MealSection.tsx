@@ -1,6 +1,6 @@
 import { Card } from "@nextui-org/react"
 import { motion } from "framer-motion"
-import { getAllergenIcon } from "@/lib/allergenIcons"
+import { getTagConfig } from "@/lib/tagConfig"
 
 // Helper to create URL-friendly IDs
 const generateItemId = (sectionName: string, itemName: string) => {
@@ -92,7 +92,7 @@ export function MealSection({ section, highlightedItemId }: MealSectionProps) {
                 </div>
 
                 {/* Allergen and Dietary Tags */}
-                {(item.allergens && item.allergens.length > 0) || item.isVegan || item.isVegetarian ? (
+                {item.allergens && item.allergens.length > 0 ? (
                   <div style={{ 
                     display: "flex", 
                     flexWrap: "wrap", 
@@ -100,66 +100,8 @@ export function MealSection({ section, highlightedItemId }: MealSectionProps) {
                     borderTop: "1px solid #EEE",
                     paddingTop: 8
                   }}>
-                    {item.isVegan && (
-                      <motion.span
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.22 }}
-                        style={{ 
-                          display: "flex", 
-                          alignItems: "center", 
-                          gap: 4, 
-                          fontSize: 13,
-                          fontWeight: 600,
-                          letterSpacing: 0.5,
-                          color: "#2E7D32",
-                          background: "rgba(46, 125, 50, 0.1)",
-                          padding: "4px 8px",
-                          borderRadius: 6
-                        }}
-                      >
-                        {getAllergenIcon("Vegan").icon}
-                        Vegan
-                      </motion.span>
-                    )}
-                    {item.isVegetarian && (
-                      <motion.span
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.22, delay: 0.03 }}
-                        style={{ 
-                          display: "flex", 
-                          alignItems: "center", 
-                          gap: 4, 
-                          fontSize: 13,
-                          fontWeight: 600,
-                          letterSpacing: 0.5,
-                          color: "#81C784",
-                          background: "rgba(129, 199, 132, 0.1)",
-                          padding: "4px 8px",
-                          borderRadius: 6
-                        }}
-                      >
-                        {getAllergenIcon("Vegetarian").icon}
-                        Vegetarian
-                      </motion.span>
-                    )}
-                    {item.allergens?.map((a, i) => {
-                      const colorMap: Record<string, { color: string, bg: string }> = {
-                        Vegan: { color: "#2E7D32", bg: "rgba(46, 125, 50, 0.1)" },
-                        Vegetarian: { color: "#81C784", bg: "rgba(129, 199, 132, 0.1)" },
-                        Halal: { color: "#009688", bg: "rgba(0, 150, 136, 0.1)" },
-                        Dairy: { color: "#FBC02D", bg: "rgba(251, 192, 45, 0.1)" },
-                        Eggs: { color: "#FFB74D", bg: "rgba(255, 183, 77, 0.1)" },
-                        Soy: { color: "#8D6E63", bg: "rgba(141, 110, 99, 0.1)" },
-                        "Wheat/Gluten": { color: "#AB47BC", bg: "rgba(171, 71, 188, 0.1)" },
-                        Wheat: { color: "#AB47BC", bg: "rgba(171, 71, 188, 0.1)" },
-                        Gluten: { color: "#AB47BC", bg: "rgba(171, 71, 188, 0.1)" },
-                        Pork: { color: "#E53935", bg: "rgba(229, 57, 53, 0.1)" },
-                        Sesame: { color: "#FB8C00", bg: "rgba(251, 140, 0, 0.1)" },
-                      }
-                      const { icon } = getAllergenIcon(a)
-                      const { color, bg } = colorMap[a] || { color: "#888", bg: "rgba(136, 136, 136, 0.1)" }
+                    {item.allergens.map((a, i) => {
+                      const { icon: Icon, textColor, bgColor } = getTagConfig(a);
                       return (
                         <motion.span
                           key={a}
@@ -169,17 +111,17 @@ export function MealSection({ section, highlightedItemId }: MealSectionProps) {
                           style={{ 
                             display: "flex", 
                             alignItems: "center", 
-                            gap: 4, 
+                            gap: 6, 
                             fontSize: 13,
                             fontWeight: 600,
                             letterSpacing: 0.5,
-                            color,
-                            background: bg,
-                            padding: "4px 8px",
-                            borderRadius: 6
+                            color: textColor,
+                            background: bgColor,
+                            padding: "4px 12px",
+                            borderRadius: 9999
                           }}
                         >
-                          {icon}
+                          <Icon size={14} />
                           {a}
                         </motion.span>
                       )

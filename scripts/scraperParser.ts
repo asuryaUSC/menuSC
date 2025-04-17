@@ -1,6 +1,16 @@
 import { JSDOM } from 'jsdom';
 import { DiningHall, MenuData } from '../lib/types.js';
 
+// Helper function to normalize meal types
+function normalizeMealType(title: string): keyof MenuData | null {
+  const t = title.toLowerCase();
+  if (t.includes("brunch")) return "brunch";
+  if (t.includes("breakfast")) return "breakfast";
+  if (t.includes("lunch")) return "lunch";
+  if (t.includes("dinner")) return "dinner";
+  return null;
+}
+
 export function parseUSCMenu(html: string): MenuData {
   const dom = new JSDOM(html);
   const doc = dom.window.document;
@@ -11,22 +21,17 @@ export function parseUSCMenu(html: string): MenuData {
   const menuData: MenuData = {
     date: new Date().toISOString().split('T')[0],
     breakfast: [],
+    brunch: [],
     lunch: [],
     dinner: []
   };
 
-  const mealTypes = ['breakfast', 'lunch', 'dinner'] as const;
-
   for (let i = 0; i < mealHeaders.length; i++) {
     const header = mealHeaders[i];
     const block = mealBlocks[i];
-    const mealTitle = header.textContent?.trim().toLowerCase() || '';
+    const mealTitle = header.textContent?.trim() || '';
     
-    let mealType: 'breakfast' | 'lunch' | 'dinner' | null = null;
-    if (mealTitle.includes('breakfast')) mealType = 'breakfast';
-    else if (mealTitle.includes('lunch')) mealType = 'lunch';
-    else if (mealTitle.includes('dinner')) mealType = 'dinner';
-
+    const mealType = normalizeMealType(mealTitle);
     if (!mealType) continue;
 
     const diningHalls = block.querySelectorAll('div.col-sm-6.col-md-4');
@@ -91,10 +96,10 @@ export function parseUSCMenu(html: string): MenuData {
         });
       }
 
-      if (!menuData[mealType]) {
-        menuData[mealType] = [];
+      const mealArray = menuData[mealType];
+      if (Array.isArray(mealArray)) {
+        mealArray.push(diningHall);
       }
-      menuData[mealType]?.push(diningHall);
     }
   }
 
