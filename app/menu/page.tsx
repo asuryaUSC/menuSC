@@ -20,6 +20,7 @@ import type {
   MealSection as MealSectionType,
   FoodItem as FoodItemType,
 } from "@/lib/types";
+import { useRef } from "react";
 import { formatDate } from "@/lib/date-utils";
 
 // Define the structure we expect after processing
@@ -87,6 +88,8 @@ function MenuPageContent() {
   );
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [selectedMenu, setSelectedMenu] = useState<DailyMenu | null>(null);
+  const mainRef = useRef<HTMLDivElement>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const [filters, setFilters] = useState({
     dietary: [] as string[],
     allergens: [] as string[],
@@ -348,10 +351,16 @@ function MenuPageContent() {
   }, [currentHall, selectedMeal]);
 
   // Scroll-to-top button logic
-  const [showScrollTop, setShowScrollTop] = useState(false);
+  // const [showScrollTop, setShowScrollTop] = useState(false);
   useEffect(() => {
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
+    const el = mainRef.current;
+    if (!el) return;
+    const handleScroll = () => {
+      // show after scrolling 75% of viewport height
+      setShowScrollTop(el.scrollTop > window.innerHeight * 0.75);
+    };
+    el.addEventListener("scroll", handleScroll);
+    return () => el.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
@@ -423,10 +432,17 @@ function MenuPageContent() {
             onClick={() => setSelectedHallIdx((i) => Math.max(0, i - 1))}
             disabled={selectedHallIdx === 0}
             style={{
-              background: "transparent",
+              background: "#f4f4f5",
               border: "none",
+              borderRadius: 9999,
+              padding: 8,
               cursor: selectedHallIdx === 0 ? "not-allowed" : "pointer",
-              opacity: selectedHallIdx === 0 ? 0.5 : 1,
+              opacity: selectedHallIdx === 0 ? 0.4 : 1,
+              transition: "background 0.18s",
+              boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
             <ChevronLeft size={20} color="#990000" />
@@ -551,11 +567,12 @@ function MenuPageContent() {
         <div
           style={{
             display: "flex",
-            justifyContent: "center",
-            gap: 4,
+            gap: "0.5rem",
             background: "#fff",
             padding: "20px",
             maxWidth: "90%",
+            justifyContent: "center",
+            margin: "auto",
           }}
         >
           {mealOptions.map((meal) => {
@@ -593,6 +610,7 @@ function MenuPageContent() {
 
       {/* Main scrollable content */}
       <main
+        ref={mainRef}
         style={{
           position: "absolute",
           top: "calc(220px + env(safe-area-inset-top))",
@@ -710,7 +728,9 @@ function MenuPageContent() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            onClick={() => {
+              mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+            }}
             style={{
               position: "fixed",
               bottom: 88,

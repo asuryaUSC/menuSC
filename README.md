@@ -50,6 +50,6 @@ feel free to use npm, yarn, or another package manager
 bun dev
 ```
 
-
 ## Prettier
+
 I installed a new package prettier. all i use is the command 'npx prettier -w .' to clean up the code before pushing
