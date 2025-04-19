@@ -567,12 +567,13 @@ function MenuPageContent() {
         <div
           style={{
             display: "flex",
-            gap: "0.5rem",
+            gap: "0.3rem",
             background: "#fff",
-            padding: "20px",
-            maxWidth: "90%",
+            width: "100%",
             justifyContent: "center",
             margin: "auto",
+            paddingTop: "20px",
+            paddingBottom: "20px",
           }}
         >
           {mealOptions.map((meal) => {
