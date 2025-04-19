@@ -1,21 +1,21 @@
 import type { NextConfig } from "next";
-import withPWA from 'next-pwa';
+import withPWA from "next-pwa";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 };
 
 export default withPWA({
-  dest: 'public',
+  dest: "public",
   register: true,
   skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development',
+  disable: process.env.NODE_ENV === "development",
   runtimeCaching: [
     {
       urlPattern: /^https:\/\/.*\.(png|jpg|jpeg|svg|gif)$/,
-      handler: 'CacheFirst',
+      handler: "CacheFirst",
       options: {
-        cacheName: 'images',
+        cacheName: "images",
         expiration: {
           maxEntries: 60,
           maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
@@ -24,9 +24,9 @@ export default withPWA({
     },
     {
       urlPattern: /^https:\/\/.*\.(woff|woff2|ttf|eot)$/,
-      handler: 'CacheFirst',
+      handler: "CacheFirst",
       options: {
-        cacheName: 'fonts',
+        cacheName: "fonts",
         expiration: {
           maxEntries: 10,
           maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days

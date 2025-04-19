@@ -34,6 +34,18 @@
   * {
     @apply border-border;
   }
+
+  html,
+  body,
+  #__next {
+    /* 1) contain the overscroll‑bounce so it never drags the whole page */
+    overscroll-behavior-y: contain;
+    overflow-x: hidden;
+
+    /* 2) paint behind the notch red */
+    background-color: white;
+    padding-top: env(safe-area-inset-top);
+  }
 }
 
 @theme inline {
@@ -147,4 +159,4 @@
   * {
     @apply border-border outline-ring/50;
   }
-} 
+}

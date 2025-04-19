@@ -19,7 +19,14 @@ export function TopNavBar() {
         width: "100%",
       }}
     >
-      <div style={{ flex: 1, display: "flex", justifyContent: "flex-start", paddingLeft: 16 }}>
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          justifyContent: "flex-start",
+          paddingLeft: 16,
+        }}
+      >
         <Link href="/search" passHref>
           <button
             aria-label="Search"
@@ -36,18 +43,31 @@ export function TopNavBar() {
               alignItems: "center",
               justifyContent: "center",
             }}
-            onMouseOver={e => e.currentTarget.style.background = "#e4e4e7"}
-            onMouseOut={e => e.currentTarget.style.background = "#f4f4f5"}
+            onMouseOver={(e) => (e.currentTarget.style.background = "#e4e4e7")}
+            onMouseOut={(e) => (e.currentTarget.style.background = "#f4f4f5")}
           >
             <Search size={20} color="#222" />
           </button>
         </Link>
       </div>
-      <div style={{ flex: 2, textAlign: "center", fontWeight: 700, fontSize: 22, fontFamily: "Outfit", color: "#990000", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+      <div
+        style={{
+          flex: 2,
+          textAlign: "center",
+          fontWeight: 700,
+          fontSize: 22,
+          fontFamily: "Outfit",
+          color: "#990000",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+        }}
+      >
         <Utensils size={22} color="#990000" style={{ marginBottom: -2 }} />
         MenuSC
       </div>
       <div style={{ flex: 1 }}></div>
     </div>
   );
-} 
+}
