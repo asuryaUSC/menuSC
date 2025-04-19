@@ -552,8 +552,10 @@ function MenuPageContent() {
           style={{
             display: "flex",
             justifyContent: "center",
-            gap: 8,
+            gap: 4,
             background: "#fff",
+            padding: "20px",
+            maxWidth: "90%",
           }}
         >
           {mealOptions.map((meal) => {
@@ -599,7 +601,7 @@ function MenuPageContent() {
           bottom: 0,
           overflowY: "auto",
           WebkitOverflowScrolling: "touch",
-          padding: 16,
+          padding: 48,
           boxSizing: "border-box",
         }}
       >
