@@ -1,9 +1,8 @@
-# Daily U
 name: Daily USC Menu Upload
 
 on:
   schedule:
-    - cron: '0 * * * *' # Runs every 2 minutes for testing
+    - cron: '0 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -27,6 +26,13 @@ jobs:
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
+
+      - name: 🔐 Decode Firebase service account key
+        run: |
+          mkdir -p scripts
+          echo "$FIREBASE_SERVICE_ACCOUNT" | base64 --decode > scripts/serviceAccountKey.json
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
       - name: Run Upload Script
         run: npx tsx dailyUpload.ts
