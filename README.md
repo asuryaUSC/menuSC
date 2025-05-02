@@ -18,7 +18,7 @@
 
 ## 📸 Preview
 
-![MenuSC Preview](./public/preview.png)
+- [MenuSC Preview](https://www.menusc.org/)
 
 ---
 
@@ -29,7 +29,7 @@
 - [Lucide React](https://lucide.dev/)
 - [Framer Motion](https://www.framer.com/motion/)
 - [Firebase](https://firebase.google.com/) (Realtime dining hall data)
-- [Tailwind (inline styles for final UI polish)](https://tailwindcss.com/) *(limited use)*
+- [Tailwind (inline styles for final UI polish)](https://tailwindcss.com/) _(limited use)_
 
 ---
 
@@ -40,3 +40,16 @@
 ```bash
 git clone git@github.com:asuryaUSC/menuSC.git
 cd menuSC
+
+### 2. Install Dependencies
+bun installl
+
+feel free to use npm, yarn, or another package manager
+
+### 3. Run it
+bun dev
+```
+
+## Prettier
+
+I installed a new package prettier. all i use is the command 'npx prettier -w .' to clean up the code before pushing

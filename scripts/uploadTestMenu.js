@@ -1,11 +1,11 @@
-const admin = require('firebase-admin');
-const path = require('path');
+const admin = require("firebase-admin");
+const path = require("path");
 
 // Initialize Firebase Admin
-const serviceAccount = require('./serviceAccountKey.json');
+const serviceAccount = require("./serviceAccountKey.json");
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.cert(serviceAccount),
 });
 
 const db = admin.firestore();
@@ -21,16 +21,16 @@ const testMenu = {
           items: [
             {
               name: "Scrambled Eggs",
-              allergens: ["Eggs", "Halal Ingredients", "Vegetarian"]
+              allergens: ["Eggs", "Halal Ingredients", "Vegetarian"],
             },
             {
               name: "Tofu",
-              allergens: ["Soy", "Vegan"]
-            }
-          ]
-        }
-      ]
-    }
+              allergens: ["Soy", "Vegan"],
+            },
+          ],
+        },
+      ],
+    },
   ],
   lunch: [
     {
@@ -41,16 +41,22 @@ const testMenu = {
           items: [
             {
               name: "Cheese Pita Pizza",
-              allergens: ["Dairy", "Halal Ingredients", "Soy", "Vegetarian", "Wheat / Gluten"]
+              allergens: [
+                "Dairy",
+                "Halal Ingredients",
+                "Soy",
+                "Vegetarian",
+                "Wheat / Gluten",
+              ],
             },
             {
               name: "Pepperoni Pita Pizza",
-              allergens: ["Dairy", "Pork", "Soy", "Wheat / Gluten"]
-            }
-          ]
-        }
-      ]
-    }
+              allergens: ["Dairy", "Pork", "Soy", "Wheat / Gluten"],
+            },
+          ],
+        },
+      ],
+    },
   ],
   dinner: [
     {
@@ -61,29 +67,29 @@ const testMenu = {
           items: [
             {
               name: "Pasta Carbonara with Bacon and Eggs",
-              allergens: ["Dairy", "Eggs", "Pork", "Wheat / Gluten"]
+              allergens: ["Dairy", "Eggs", "Pork", "Wheat / Gluten"],
             },
             {
               name: "Roasted Cauliflower with Dill, Garlic and Lemon",
-              allergens: ["Halal Ingredients", "Vegan"]
-            }
-          ]
-        }
-      ]
-    }
-  ]
+              allergens: ["Halal Ingredients", "Vegan"],
+            },
+          ],
+        },
+      ],
+    },
+  ],
 };
 
 async function uploadTestMenu() {
   try {
-    await db.collection('menus').doc('2025-04-15').set(testMenu);
-    console.log('Successfully uploaded test menu data!');
+    await db.collection("menus").doc("2025-04-15").set(testMenu);
+    console.log("Successfully uploaded test menu data!");
   } catch (error) {
-    console.error('Error uploading test menu:', error);
+    console.error("Error uploading test menu:", error);
   } finally {
     // Clean up Firebase Admin
     await admin.app().delete();
   }
 }
 
-uploadTestMenu(); 
+uploadTestMenu();

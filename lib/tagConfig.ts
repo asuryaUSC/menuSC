@@ -12,69 +12,71 @@ import {
 } from "lucide-react";
 
 export const tagConfig = {
-  "Vegetarian": {
+  Vegetarian: {
     icon: Leaf,
     textColor: "#388e3c",
-    bgColor: "#eaf5ea"
+    bgColor: "#eaf5ea",
   },
-  "Vegan": {
+  Vegan: {
     icon: Sprout,
     textColor: "#2e7d32",
-    bgColor: "#e3f2e1"
+    bgColor: "#e3f2e1",
   },
   "Halal Ingredients": {
     icon: Moon,
     textColor: "#00796b",
-    bgColor: "#e0f2f1"
+    bgColor: "#e0f2f1",
   },
-  "Dairy": {
+  Dairy: {
     icon: GlassWater,
     textColor: "#0288d1",
-    bgColor: "#e1f5fe"
+    bgColor: "#e1f5fe",
   },
-  "Eggs": {
+  Eggs: {
     icon: Egg,
     textColor: "#f9a825",
-    bgColor: "#fff8e1"
+    bgColor: "#fff8e1",
   },
   "Wheat / Gluten": {
     icon: Wheat,
     textColor: "#c49b63",
-    bgColor: "#f8f1e7"
+    bgColor: "#f8f1e7",
   },
-  "Soy": {
+  Soy: {
     icon: Bean,
     textColor: "#6d4c41",
-    bgColor: "#efebe9"
+    bgColor: "#efebe9",
   },
-  "Sesame": {
+  Sesame: {
     icon: Nut,
     textColor: "#f57c00",
-    bgColor: "#fff3e0"
+    bgColor: "#fff3e0",
   },
-  "Nuts": {
+  Nuts: {
     icon: Nut,
     textColor: "#5d4037",
-    bgColor: "#efebe9"
+    bgColor: "#efebe9",
   },
-  "Pork": {
+  Pork: {
     icon: PiggyBank,
     textColor: "#d81b60",
-    bgColor: "#fde4ec"
+    bgColor: "#fde4ec",
   },
   "Food Not Analyzed for Allergens": {
     icon: FlaskConical,
     textColor: "#616161",
-    bgColor: "#f5f5f5"
-  }
+    bgColor: "#f5f5f5",
+  },
 } as const;
 
 export type TagLabel = keyof typeof tagConfig;
 
 export function getTagConfig(label: string) {
-  return tagConfig[label as TagLabel] || {
-    icon: FlaskConical,
-    textColor: "#616161",
-    bgColor: "#f5f5f5"
-  };
-} 
+  return (
+    tagConfig[label as TagLabel] || {
+      icon: FlaskConical,
+      textColor: "#616161",
+      bgColor: "#f5f5f5",
+    }
+  );
+}

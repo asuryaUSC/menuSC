@@ -1,18 +1,18 @@
-import { MealSection } from "./MealSection"
+import { MealSection } from "./MealSection";
 
 interface DiningHallContentProps {
   hall: {
-    name: string
+    name: string;
     sections: Array<{
-      name: string
+      name: string;
       items: Array<{
-        name: string
-        allergens?: string[]
-        isVegetarian?: boolean
-        isVegan?: boolean
-      }>
-    }>
-  }
+        name: string;
+        allergens?: string[];
+        isVegetarian?: boolean;
+        isVegan?: boolean;
+      }>;
+    }>;
+  };
 }
 
 export function DiningHallContent({ hall }: DiningHallContentProps) {
@@ -40,5 +40,5 @@ export function DiningHallContent({ hall }: DiningHallContentProps) {
         <MealSection key={section.name + idx} section={section} />
       ))}
     </div>
-  )
-} 
+  );
+}

@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 
-export function MealTabs({ meals, onChange, value }: {
+export function MealTabs({
+  meals,
+  onChange,
+  value,
+}: {
   meals: string[];
   onChange?: (meal: string) => void;
   value?: string;
@@ -27,7 +31,7 @@ export function MealTabs({ meals, onChange, value }: {
       }}
     >
       <div style={{ display: "flex", gap: 12, margin: "16px 0" }}>
-        {meals.map(meal => (
+        {meals.map((meal) => (
           <motion.button
             key={meal}
             onClick={() => handleChange(meal)}
@@ -44,16 +48,26 @@ export function MealTabs({ meals, onChange, value }: {
               fontWeight: selected === meal ? 700 : 500,
               fontSize: 15,
               color: selected === meal ? "#111" : "#888",
-              boxShadow: selected === meal ? "0 1px 6px rgba(0,0,0,0.04)" : undefined,
+              boxShadow:
+                selected === meal ? "0 1px 6px rgba(0,0,0,0.04)" : undefined,
               transition: "all 0.18s cubic-bezier(.4,0,.2,1)",
               cursor: "pointer",
               minWidth: 90,
               fontFamily: "Outfit",
-              borderBottom: selected === meal ? "2px solid #e0e0e0" : "2px solid transparent",
+              borderBottom:
+                selected === meal
+                  ? "2px solid #e0e0e0"
+                  : "2px solid transparent",
             }}
-            onMouseDown={e => e.currentTarget.style.background = "#ececec"}
-            onMouseUp={e => e.currentTarget.style.background = selected === meal ? "#f5faff" : "#fff"}
-            onMouseLeave={e => e.currentTarget.style.background = selected === meal ? "#f5faff" : "#fff"}
+            onMouseDown={(e) => (e.currentTarget.style.background = "#ececec")}
+            onMouseUp={(e) =>
+              (e.currentTarget.style.background =
+                selected === meal ? "#f5faff" : "#fff")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.background =
+                selected === meal ? "#f5faff" : "#fff")
+            }
           >
             {meal}
           </motion.button>
@@ -61,4 +75,4 @@ export function MealTabs({ meals, onChange, value }: {
       </div>
     </div>
   );
-} 
+}
