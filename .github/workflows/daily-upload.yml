@@ -29,8 +29,7 @@ jobs:
 
       - name: 🔐 Decode Firebase service account key
         run: |
-          mkdir -p scripts
-          echo "$FIREBASE_SERVICE_ACCOUNT" | base64 --decode > scripts/serviceAccountKey.json
+          echo "$FIREBASE_SERVICE_ACCOUNT" | base64 --decode > serviceAccountKey.json
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
