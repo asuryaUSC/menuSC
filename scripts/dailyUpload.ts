@@ -1,14 +1,11 @@
 #!/usr/bin/env node
 /**
  * Daily USC Dining Menu Upload Script
- *
- * Run daily at 12:05 AM via cron:
- * 5 0 * * * cd /path/to/project && /usr/local/bin/npm run upload-daily-menu >> cron.log 2>&1
  */
 
 import { chromium } from "playwright";
 import { initializeApp, cert, getApps } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, Firestore, QueryDocumentSnapshot } from "firebase-admin/firestore";
 import { parseUSCMenu } from "./scraperParser.js";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
@@ -18,7 +15,7 @@ const __dirname = dirname(__filename);
 
 const BASE_URL = "https://hospitality.usc.edu/residential-dining-menus/";
 
-// Helper to format date for URL parameter
+// Format date for URL query param
 function formatDateForURL(date: Date): string {
   return date
     .toLocaleDateString("en-US", {
@@ -29,7 +26,7 @@ function formatDateForURL(date: Date): string {
     .replace(/,/g, "");
 }
 
-// Helper to get array of dates (today + next 3 days)
+// Today + next 3 days
 function getDateRange(): Date[] {
   const dates = [];
   const today = new Date();
@@ -41,7 +38,35 @@ function getDateRange(): Date[] {
   return dates;
 }
 
-async function main() {
+// Delete menu documents older than N days
+async function deleteOldMenus(db: Firestore, days: number = 15): Promise<void> {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+
+  const snapshot = await db.collection("menus").get();
+  const batch = db.batch();
+  let deleteCount = 0;
+
+  snapshot.forEach((doc: QueryDocumentSnapshot) => {
+    const docId = doc.id; // expected format: YYYY-MM-DD
+    const docDate = new Date(docId);
+
+    if (!isNaN(docDate.getTime()) && docDate < cutoff) {
+      batch.delete(doc.ref);
+      deleteCount++;
+      console.log(`🧹 Deleting old menu: ${docId}`);
+    }
+  });
+
+  if (deleteCount > 0) {
+    await batch.commit();
+    console.log(`🧹 Deleted ${deleteCount} old menu(s) older than ${days} days`);
+  } else {
+    console.log("🧹 No old menus found to delete");
+  }
+}
+
+async function main(): Promise<void> {
   console.log("🔍 Starting multi-day menu upload");
 
   if (getApps().length === 0) {
@@ -55,6 +80,8 @@ async function main() {
   const page = await browser.newPage();
 
   try {
+    await deleteOldMenus(db, 15); // delete menus older than 15 days
+
     const dates = getDateRange();
     console.log(`📅 Processing ${dates.length} days of menus`);
 
@@ -70,8 +97,6 @@ async function main() {
 
       const html = await page.content();
       const menuData = parseUSCMenu(html);
-
-      // Update the date in the menu data to match the target date
       menuData.date = isoDate;
 
       console.log(`📦 Parsed menu for ${isoDate}`);
