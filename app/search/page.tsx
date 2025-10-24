@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ArrowLeft, ChevronDown } from "lucide-react";
-import { getUpcomingMenus } from "@/lib/firebase-utils";
+import { getMenuData } from "@/lib/test-data-utils";
 import type { DailyMenu, DiningHall, FoodItem } from "@/lib/types";
 import { SearchResultCard } from "@/components/SearchResultCard";
 
@@ -73,7 +73,7 @@ export default function SearchPage() {
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const menus = await getUpcomingMenus();
+      const menus = await getMenuData();
       setMenuDataMap(menus);
       setLoading(false);
       inputRef.current?.focus();

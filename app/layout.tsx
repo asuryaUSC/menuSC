@@ -54,7 +54,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon.png" />
         <link rel="apple-touch-startup-image" href="/icon.png" />
       </head>
-      <body className={cn("h-full font-sans")}>{children}</body>
+      <body className={cn("h-full font-sans")} suppressHydrationWarning={true}>{children}</body>
     </html>
   );
 }

@@ -8,9 +8,6 @@ on:
 jobs:
   upload-menu:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: scripts
 
     steps:
       - name: Checkout code
@@ -27,11 +24,9 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      - name: 🔐 Decode Firebase service account key
-        run: |
-          echo "$FIREBASE_SERVICE_ACCOUNT" | base64 --decode > serviceAccountKey.json
-        env:
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-
       - name: Run Upload Script
-        run: npx tsx dailyUpload.ts
+        run: npx tsx scripts/dailyUpload.ts
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}

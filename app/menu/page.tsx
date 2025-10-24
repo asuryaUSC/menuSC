@@ -5,8 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { TopNavBar } from "@/components/TopNavBar";
 import { MealSection } from "@/components/MealSection";
 import { FilterModal } from "@/components/FilterModal";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { getTestMenuData } from "@/lib/test-data-utils";
 import {
   ChevronLeft,
   ChevronRight,
@@ -172,17 +171,12 @@ function MenuPageContent() {
       setLoading(true);
       setError("");
       try {
-        const menuDoc = await getDoc(doc(db, "menus", selectedDate));
-        if (!menuDoc.exists()) {
-          setError("No menu available for this date.");
-          setHalls([]);
-          setSelectedMenu(null);
-          return;
-        }
-
-        const menu = menuDoc.data() as DailyMenu;
+        // Use test data temporarily
+        const testMenus = await getTestMenuData();
+        const menu = testMenus[selectedDate] || Object.values(testMenus)[0];
+        
         if (!menu) {
-          setError("This menu hasn&rsquo;t been posted yet.");
+          setError("No menu available for this date.");
           setHalls([]);
           setSelectedMenu(null);
           return;
