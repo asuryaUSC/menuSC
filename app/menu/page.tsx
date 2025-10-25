@@ -365,6 +365,7 @@ function MenuPageContent() {
         boxSizing: "border-box",
         top: 0,
         left: 0,
+        paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >
       {/* highlight animation and iOS safe‐area fixes */}
@@ -409,6 +410,7 @@ function MenuPageContent() {
           zIndex: 100,
           background: "white",
           boxShadow: "0 1px 6px rgba(0,0,0,0.05)",
+          paddingTop: "env(safe-area-inset-top)",
         }}
       >
         {/* TopNavBar */}
@@ -615,14 +617,14 @@ function MenuPageContent() {
         ref={mainRef}
         style={{
           position: "absolute",
-          top: "290px",
+          top: "calc(290px + env(safe-area-inset-top))",
           left: 0,
           right: 0,
           bottom: 0,
           overflowY: "auto",
           overflowX: "hidden",
           WebkitOverflowScrolling: "touch",
-          padding: "0 16px 48px 16px",
+          padding: "16px 16px 48px 16px",
           boxSizing: "border-box",
           scrollbarWidth: "none",
           msOverflowStyle: "none",
