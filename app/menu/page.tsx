@@ -357,17 +357,14 @@ function MenuPageContent() {
   return (
     <div
       style={{
-        // position: "relative",
-        // width: "100vw",
-        // height: "100vh",
-        // overflow: "hidden",              // prevent body‐level scroll
-        // overscrollBehaviorY: "contain",  // contain bounce to the inner <main>
-        // background: "#fafbfc",
-        // boxSizing: "border-box",
+        position: "fixed",
+        width: "100vw",
+        height: "100vh",
+        overflow: "hidden",
         background: "#fafbfc",
-        minHeight: "100vh",
-        position: "relative",
         boxSizing: "border-box",
+        top: 0,
+        left: 0,
       }}
     >
       {/* highlight animation and iOS safe‐area fixes */}
@@ -379,13 +376,25 @@ function MenuPageContent() {
         .highlighted-item > div > div {
           animation: highlight-item 1.8s ease-in-out;
         }
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        @media (max-width: 375px) {
+          .meal-selector-btn {
+            padding: 6px 12px !important;
+            font-size: 12px !important;
+            border-width: 1.5px !important;
+          }
+        }
         @supports (-webkit-touch-callout: none) {
-          html { height: -webkit-fill-available; }
+          html {
+            height: -webkit-fill-available;
+            overflow: hidden;
+          }
           body {
             overscroll-behavior-y: contain;
-            padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
             min-height: -webkit-fill-available;
+            overflow: hidden;
           }
         }
       `}</style>
@@ -393,12 +402,12 @@ function MenuPageContent() {
       {/* fixed, safe‐area‐aware header */}
       <header
         style={{
-          position: "sticky",
+          position: "absolute",
           top: 0,
+          left: 0,
+          right: 0,
           zIndex: 100,
           background: "white",
-          height: "60px",
-          width: "100%",
           boxShadow: "0 1px 6px rgba(0,0,0,0.05)",
         }}
       >
@@ -564,7 +573,7 @@ function MenuPageContent() {
             justifyContent: "center",
             margin: "auto",
             paddingTop: "20px",
-            paddingBottom: "20px",
+            paddingBottom: "32px",
           }}
         >
           {mealOptions.map((meal) => {
@@ -576,6 +585,7 @@ function MenuPageContent() {
                 key={meal}
                 onClick={() => isAvailable && setSelectedMeal(meal)}
                 disabled={!isAvailable}
+                className="meal-selector-btn"
                 style={{
                   padding: "8px 20px",
                   borderRadius: 9999,
@@ -605,15 +615,19 @@ function MenuPageContent() {
         ref={mainRef}
         style={{
           position: "absolute",
-          top: "calc(220px + env(safe-area-inset-top))",
+          top: "290px",
           left: 0,
           right: 0,
           bottom: 0,
           overflowY: "auto",
+          overflowX: "hidden",
           WebkitOverflowScrolling: "touch",
-          padding: 48,
+          padding: "0 16px 48px 16px",
           boxSizing: "border-box",
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
         }}
+        className="hide-scrollbar"
       >
         {/* content container */}
         <div

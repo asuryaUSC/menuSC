@@ -32,9 +32,17 @@ export default function LandingPage() {
   const [promptType, setPromptType] = useState<PromptType>("none");
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
+  const [isClient, setIsClient] = useState(false);
+
+  // Set client-side flag
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Redirect if running as PWA
   useEffect(() => {
+    if (!isClient) return;
+
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
       (window.navigator as Navigator & { standalone?: boolean }).standalone ===
@@ -76,7 +84,7 @@ export default function LandingPage() {
     } else {
       setPromptType("none");
     }
-  }, [router]);
+  }, [router, isClient]);
 
   const handlePrimaryActionClick = () => {
     if (promptType === "ios") {
@@ -112,16 +120,8 @@ export default function LandingPage() {
     };
   }, [isModalOpen]);
 
-  // Prevent rendering landing content if redirecting (optional, but cleaner)
-  // Note: This requires checking isStandalone *outside* the useEffect
-  const isStandaloneInitialCheck =
-    typeof window !== "undefined" &&
-    (window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as Navigator & { standalone?: boolean }).standalone ===
-        true);
-
-  if (isStandaloneInitialCheck) {
-    // Optionally return a minimal loading state or null while redirect happens
+  // Show loading state until client-side check completes
+  if (!isClient || promptType === "standalone") {
     return <div style={{ background: "#FAFBFC", minHeight: "100vh" }}></div>;
   }
 
