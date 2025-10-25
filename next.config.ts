@@ -10,7 +10,20 @@ export default withPWA({
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === "development",
+  buildExcludes: [/middleware-manifest\.json$/],
   runtimeCaching: [
+    {
+      urlPattern: /^https:\/\/iozwqlxririkmbncmpnq\.supabase\.co\/storage\/v1\/object\/public\/menus\/.*\.json$/,
+      handler: "NetworkFirst",
+      options: {
+        cacheName: "menu-data",
+        expiration: {
+          maxEntries: 10,
+          maxAgeSeconds: 60 * 60, // 1 hour - always get fresh menus
+        },
+        networkTimeoutSeconds: 10,
+      },
+    },
     {
       urlPattern: /^https:\/\/.*\.(png|jpg|jpeg|svg|gif)$/,
       handler: "CacheFirst",

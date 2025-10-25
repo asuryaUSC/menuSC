@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import PWAUpdatePrompt from "@/components/PWAUpdatePrompt";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -54,7 +55,10 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon.png" />
         <link rel="apple-touch-startup-image" href="/icon.png" />
       </head>
-      <body className={cn("h-full font-sans")} suppressHydrationWarning={true}>{children}</body>
+      <body className={cn("h-full font-sans")} suppressHydrationWarning={true}>
+        {children}
+        <PWAUpdatePrompt />
+      </body>
     </html>
   );
 }

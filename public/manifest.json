@@ -1,6 +1,7 @@
 {
   "name": "MenuSC - USC Dining",
   "short_name": "MenuSC",
+  "version": "2.0.0",
   "description": "Quick access to USC dining hall menus.",
   "start_url": "/",
   "display": "standalone",
