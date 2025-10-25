@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -12,19 +12,19 @@ export const metadata: Metadata = {
   title: "USC Dining Menu",
   description: "Quickly check today's USC dining hall menus.",
   manifest: "/manifest.json",
-  themeColor: "#990000",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-    viewportFit: "cover",
-  },
   appleWebApp: {
-    capable: true, // <meta name="apple-mobile-web-app-capable" content="yes" />
+    capable: true,
     statusBarStyle: "black-translucent",
-    // <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: "#990000",
 };
 
 export default function RootLayout({

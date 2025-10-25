@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:hospitality.usc.edu)",
+      "Bash(node:*)",
+      "Bash(grep:*)",
+      "Bash(copy scraped-menu-data.json publictest-menu-data.json)",
+      "WebSearch",
+      "Bash(npm install:*)",
+      "Bash(npx supabase:*)",
+      "Bash(set:*)",
+      "Bash(echo:*)",
+      "Bash(SUPABASE_ACCESS_TOKEN=\"sbp_9e77b2d51f3b20a14446148ae341ebe3c5a79434\" npx supabase functions deploy menu-scraper)",
+      "Bash(SUPABASE_ACCESS_TOKEN=\"sbp_9e77b2d51f3b20a14446148ae341ebe3c5a79434\" npx supabase link --project-ref iozwqlxririkmbncmpnq)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

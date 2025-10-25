@@ -64,3 +64,7 @@ current-page.html
 setup-cron*.sql
 simple-cron-setup.sql
 simple-edge-function.ts
+
+# Supabase local development (keep config and functions)
+supabase/.temp/
+supabase/.branches/

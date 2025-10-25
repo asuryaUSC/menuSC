@@ -1,55 +1,63 @@
-# 🍽️ MenuSC
+# MenuSC
 
-**MenuSC** is a beautifully designed PWA (Progressive Web App) that makes it effortless to view today's dining hall menus at USC. Built with Apple-inspired UI design and clean animations, it’s fast, mobile-first, and installable directly on your phone or Mac.
+A fast, mobile-first PWA for viewing USC dining hall menus. Built with Next.js 15 and designed with a clean, Apple-inspired UI.
 
----
+## Features
 
-## ✨ Features
+- View menus for all 3 USC dining halls (EVK, Parkside, USC Village)
+- Filter by meal type (Breakfast, Lunch, Dinner, Brunch)
+- Search functionality with live results
+- Allergen information for all menu items
+- Fully responsive and installable as a PWA
+- Automated daily scraping via GitHub Actions
 
-- 🏫 View menus for **all USC dining halls**
-- 🍳 Filter by **Breakfast / Lunch / Dinner**
-- 🔍 Apple-style **Spotlight Search** with live results
-- 🍔 Shows **allergens** with icons
-- 📱 Fully responsive & installable as a **PWA**
-- 🌙 Dark mode support (coming soon!)
-- 💨 Built with **Next.js**, **shadcn/ui**, **lucide-react**, and **Framer Motion**
+## Tech Stack
 
----
+- **Next.js 15** - React framework with App Router
+- **Supabase** - Storage for menu data
+- **shadcn/ui** - UI components
+- **Playwright** - Web scraping
+- **Tailwind CSS** - Styling
+- **next-pwa** - Progressive Web App support
 
-## 📸 Preview
-
-- [MenuSC Preview](https://www.menusc.org/)
-
----
-
-## 🔧 Tech Stack
-
-- [Next.js 15](https://nextjs.org/)
-- [shadcn/ui](https://ui.shadcn.com/)
-- [Lucide React](https://lucide.dev/)
-- [Framer Motion](https://www.framer.com/motion/)
-- [Firebase](https://firebase.google.com/) (Realtime dining hall data)
-- [Tailwind (inline styles for final UI polish)](https://tailwindcss.com/) _(limited use)_
-
----
-
-## 🚀 Getting Started
-
-### 1. Clone the repo
+## Getting Started
 
 ```bash
+# Clone the repository
 git clone git@github.com:asuryaUSC/menuSC.git
 cd menuSC
 
-### 2. Install Dependencies
-bun installl
+# Install dependencies
+npm install
 
-feel free to use npm, yarn, or another package manager
+# Set up environment variables
+# Create .env.local with your Supabase credentials:
+# SUPABASE_URL=your_supabase_url
+# SUPABASE_SERVICE_KEY=your_service_key
+# SUPABASE_ANON_KEY=your_anon_key
+# NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+# NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 
-### 3. Run it
-bun dev
+# Run development server
+npm run dev
 ```
 
-## Prettier
+## Scraping Menus
 
-I installed a new package prettier. all i use is the command 'npx prettier -w .' to clean up the code before pushing
+The scraper runs automatically via GitHub Actions every hour. To run manually:
+
+```bash
+npm run scrape
+```
+
+## Project Structure
+
+- `/app` - Next.js App Router pages
+- `/components` - React components
+- `/lib` - Utility functions and Supabase client
+- `/scripts` - Menu scraping scripts
+- `/supabase` - Supabase Edge Functions (backup scraper)
+
+## License
+
+MIT
